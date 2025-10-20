@@ -65,9 +65,14 @@
             cursor: not-allowed;
             opacity: 0.7;
         }
-        .ticket.selected, .engineer.selected {
-            background-color: #aed6f1;
-            border-color: #3498db;
+        /* MODIFIED: Custom colors for selection */
+        .ticket.selected {
+            background-color: #f7cac9; /* Light Red/Pink for Ticket Selection */
+            border: 2px solid #e74c3c;
+        }
+        .engineer.selected {
+            background-color: #bbded6; /* Light Teal/Green for Engineer Selection */
+            border: 2px solid #16a085;
         }
         .progress-bar {
             width: 100%;
@@ -98,13 +103,20 @@
         button:hover {
             background-color: #2980b9;
         }
+        /* NEW: Hire button styling based on level for visual distinction */
+        .hire-button-1 { background-color: #2ecc71; } /* Green */
+        .hire-button-2 { background-color: #f1c40f; } /* Yellow */
+        .hire-button-3 { background-color: #e67e22; } /* Orange */
+        .hire-button-1:hover { background-color: #27ad60; }
+        .hire-button-2:hover { background-color: #f39c12; }
+        .hire-button-3:hover { background-color: #d35400; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>My IT Company 📈</h1>
-        <div id="stats">Money: $0 | Total Tickets Fixed: 0</div>
+        <div id="stats">Money: $500 | Total Tickets Fixed: 0</div>
     </header>
 
     <div id="tickets" class="container">
@@ -116,9 +128,9 @@
     <div id="engineers" class="container">
         <h2>Engineers</h2>
         <div id="engineer-list"></div>
-                <button onclick="attemptHire(1)">Hire Junior (Skill 1) - $50</button>
-        <button onclick="attemptHire(2)">Hire Junior II (Skill 2) - $100</button>
-        <button onclick="attemptHire(3)">Hire Mid-Level (Skill 3) - $150</button>
+                <button class="hire-button-1" onclick="attemptHire(1)">Hire Junior (Skill 1) - $50</button>
+        <button class="hire-button-2" onclick="attemptHire(2)">Hire Junior II (Skill 2) - $100</button>
+        <button class="hire-button-3" onclick="attemptHire(3)">Hire Mid-Level (Skill 3) - $150</button>
     </div>
 
     <div id="in-progress" class="container">
@@ -130,14 +142,14 @@
         // --- GAME STATE ---
         let state = {
             company: {
-                money: 500, // Start with some money to be able to hire
+                money: 500, 
                 totalTicketsFixed: 0,
             },
             engineers: [
                 { id: 1, name: "Alice", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
                 { id: 2, name: "Bob", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
             ],
-            inProgressTickets: [], // Refactored list
+            inProgressTickets: [], 
             tickets: [],
             nextTicketId: 1,
             nextEngineerId: 3,
@@ -148,9 +160,9 @@
         // --- CONSTANTS ---
         const TICKET_BASE_PAY = 50;
         const PROGRESS_TO_COMPLETE = 100;
-        const PROMOTION_THRESHOLD = 5; // Promote every 5 tickets
-        const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; // Cost by skill level
-        const HOURLY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 }; // Daily salary cost per skill level
+        const PROMOTION_THRESHOLD = 5; 
+        const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; 
+        const HOURLY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 };
         const JUNIOR_ENGINEER_NAMES = ["Charlie", "Dana", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"];
         
         // Rename elements for simplicity
@@ -175,7 +187,6 @@
         }
 
         function getRandomName() {
-            // Get names not currently in use
             const usedNames = state.engineers.map(e => e.name);
             const availableNames = JUNIOR_ENGINEER_NAMES.filter(name => !usedNames.includes(name));
             
@@ -196,6 +207,52 @@
             };
             state.tickets.push(newTicket);
             render();
+        }
+
+        /** Handles selecting a ticket */
+        function selectTicket(ticketId) {
+            state.selectedTicket = ticketId === state.selectedTicket ? null : ticketId; // Toggle selection
+            state.selectedEngineer = null; // Clear engineer selection
+            render();
+            attemptAssignment();
+        }
+
+        /** Handles selecting an engineer */
+        function selectEngineer(engineerId) {
+            const engineer = state.engineers.find(e => e.id === engineerId);
+            if (engineer.status === 'idle') {
+                state.selectedEngineer = engineerId === state.selectedEngineer ? null : engineerId; // Toggle selection
+                render();
+                attemptAssignment();
+            } else {
+                alert("This engineer is already working!");
+            }
+        }
+
+        /** Tries to assign the selected ticket to the selected engineer */
+        function attemptAssignment() {
+            if (!state.selectedTicket || !state.selectedEngineer) return;
+
+            const ticketIndex = state.tickets.findIndex(t => t.id === state.selectedTicket);
+            const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
+            const ticket = state.tickets[ticketIndex];
+
+            if (ticket && engineer && engineer.status === 'idle') {
+                // Assign
+                engineer.status = 'working';
+                engineer.assignedTicket = ticket.id;
+                ticket.engineerId = engineer.id; 
+                
+                // Move ticket from 'available' to 'inProgress'
+                state.inProgressTickets.push(ticket);
+                state.tickets.splice(ticketIndex, 1);
+                
+                // Clear selections
+                state.selectedTicket = null;
+                state.selectedEngineer = null;
+                
+                render();
+            }
         }
 
         /** Handles hiring a new engineer at a specific skill level */
@@ -220,51 +277,6 @@
             render();
         }
 
-        /** Handles selecting a ticket */
-        function selectTicket(ticketId) {
-            state.selectedTicket = ticketId;
-            state.selectedEngineer = null; // Clear engineer selection
-            render();
-            attemptAssignment();
-        }
-
-        /** Handles selecting an engineer */
-        function selectEngineer(engineerId) {
-            const engineer = state.engineers.find(e => e.id === engineerId);
-            if (engineer.status === 'idle') {
-                state.selectedEngineer = engineerId;
-                render();
-                attemptAssignment();
-            } else {
-                alert("This engineer is already working!");
-            }
-        }
-
-        /** Tries to assign the selected ticket to the selected engineer */
-        function attemptAssignment() {
-            if (!state.selectedTicket || !state.selectedEngineer) return;
-
-            const ticketIndex = state.tickets.findIndex(t => t.id === state.selectedTicket);
-            const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
-            const ticket = state.tickets[ticketIndex];
-
-            if (ticket && engineer && engineer.status === 'idle') {
-                // Assign
-                engineer.status = 'working';
-                engineer.assignedTicket = ticket.id;
-                ticket.engineerId = engineer.id; // Link ticket to engineer
-                
-                // Move ticket from 'available' to 'inProgress'
-                state.inProgressTickets.push(ticket);
-                state.tickets.splice(ticketIndex, 1);
-                
-                // Clear selections
-                state.selectedTicket = null;
-                state.selectedEngineer = null;
-                
-                render();
-            }
-        }
 
         /** Finalizes a ticket */
         function completeTicket(engineer, ticket) {
@@ -307,19 +319,18 @@
 
             // 2. Deduct Daily Salaries (Operating Costs)
             state.engineers.forEach(engineer => {
-                const salary = HOURLY_SALARIES[engineer.skill] || 5; // Default salary
+                const salary = HOURLY_SALARIES[engineer.skill] || 5;
                 dailySalaryCost += salary;
             });
 
             state.company.money -= dailySalaryCost;
             
-            // Check for Game Over (Optional but recommended)
-            if (state.company.money < 0) {
-                // To prevent money from going too negative visually
-                state.company.money = 0; 
-                // In a full game, you'd stop the loop here
-                // alert("Game Over! You ran out of money."); 
+            // Optional Game Over Check
+            if (state.company.money < 0 && state.engineers.length > 0) {
+                // In a real game, you'd stop the loop here. 
+                // For now, we'll just allow it to go negative.
             }
+
 
             // 3. Clean up and Render
             state.inProgressTickets = state.inProgressTickets.filter(t => t.progress < PROGRESS_TO_COMPLETE);
@@ -330,7 +341,7 @@
         }
 
 
-        // --- RENDERING FUNCTIONS (Kept mostly the same) ---
+        // --- RENDERING FUNCTIONS ---
         
         /** Renders everything */
         function render() {
@@ -407,14 +418,14 @@
         // --- INITIALIZE ---
         newTicketBtn.addEventListener('click', generateTicket);
         
-        // Expose global function for onclick in HTML
+        // Expose global functions for onclick in HTML
         window.attemptHire = attemptHire;
         window.selectTicket = selectTicket;
         window.selectEngineer = selectEngineer;
         
         // Start the game
-        state.company.money = 500; // Give starting cash
-        generateTicket(); // Start with one ticket
+        state.company.money = 500; 
+        generateTicket(); 
         render();
         setInterval(gameLoop, 1000); // Run game loop every second
     </script>
