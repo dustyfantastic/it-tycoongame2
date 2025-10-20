@@ -16,7 +16,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             padding: 20px;
-            background-color: #f4f7f6;
+            **background-color: #e8f5e9; /* Changed to Light Green */**
             color: #333;
         }
         header {
@@ -39,14 +39,14 @@
             padding: 20px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        
+        
         /* STYLING CHANGE: Available Tickets container is now yellow */
-        #tickets { 
+        #tickets { 
             grid-area: tickets;
             background-color: #fffac8; /* A nice light yellow */
-            border: 1px solid #f1c40f; 
+            border: 1px solid #f1c40f; 
         }
-        
+        
         #engineers { grid-area: engineers; }
         #in-progress { grid-area: progress; }
         #actions { grid-area: actions; text-align: center; }
@@ -65,10 +65,10 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .engineer.idle {
-            background-color: #e8f5e9; 
+            background-color: #e8f5e9; 
         }
         .engineer.working {
-            background-color: #fff8e1; 
+            background-color: #fff8e1; 
             cursor: not-allowed;
             opacity: 0.7;
         }
@@ -93,7 +93,7 @@
             height: 100%;
             background-color: #2ecc71;
             width: 0%;
-            transition: none; 
+            transition: none; 
         }
         button {
             display: block;
@@ -115,15 +115,15 @@
             cursor: not-allowed;
         }
         /* Hire button styling based on level for visual distinction */
-        .hire-button-1 { background-color: #2ecc71; } 
-        .hire-button-2 { background-color: #f1c40f; } 
-        .hire-button-3 { background-color: #e67e22; } 
+        .hire-button-1 { background-color: #2ecc71; } 
+        .hire-button-2 { background-color: #f1c40f; } 
+        .hire-button-3 { background-color: #e67e22; } 
         .hire-button-1:hover:not(:disabled) { background-color: #27ad60; }
         .hire-button-2:hover:not(:disabled) { background-color: #f39c12; }
         .hire-button-3:hover:not(:disabled) { background-color: #d35400; }
 
         #assign-button {
-            background-color: #e74c3c; 
+            background-color: #e74c3c; 
             font-size: 1.5em;
             width: 50%;
         }
@@ -166,14 +166,14 @@
         // --- GAME STATE ---
         let state = {
             company: {
-                money: 500, 
+                money: 500, 
                 totalTicketsFixed: 0,
             },
             engineers: [
                 { id: 1, name: "Alice", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
                 { id: 2, name: "Bob", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
             ],
-            inProgressTickets: [], 
+            inProgressTickets: [], 
             tickets: [],
             nextTicketId: 1,
             nextEngineerId: 3,
@@ -184,18 +184,18 @@
         // --- CONSTANTS ---
         const TICKET_BASE_PAY = 50;
         const PROGRESS_TO_COMPLETE = 100;
-        const PROMOTION_THRESHOLD = 5; 
-        const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; 
+        const PROMOTION_THRESHOLD = 5; 
+        const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; 
         const HOURLY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 };
         const JUNIOR_ENGINEER_NAMES = ["Charlie", "Dana", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"];
-        
+        
         // Rename elements for simplicity
         const ticketListEl = document.getElementById('ticket-list');
         const engineerListEl = document.getElementById('engineer-list');
         const progressListEl = document.getElementById('progress-list');
         const statsEl = document.getElementById('stats');
         const newTicketBtn = document.getElementById('new-ticket-btn');
-        const assignBtn = document.getElementById('assign-button'); 
+        const assignBtn = document.getElementById('assign-button'); 
 
 
         // --- HELPER FUNCTIONS ---
@@ -219,7 +219,7 @@
                 ? availableNames[Math.floor(Math.random() * availableNames.length)]
                 : `Engineer ${state.nextEngineerId}`;
         }
-        
+        
         /** Updates the visibility and text of the Assign button */
         function updateAssignmentButton() {
             const ticketSelected = state.selectedTicket !== null;
@@ -281,7 +281,7 @@
                 // Assign
                 engineer.status = 'working';
                 engineer.assignedTicket = ticket.id;
-                ticket.engineerId = engineer.id; 
+                ticket.engineerId = engineer.id; 
                 
                 // Move ticket from 'available' to 'inProgress'
                 state.inProgressTickets.push(ticket);
@@ -308,7 +308,7 @@
             const newEngineer = {
                 id: state.nextEngineerId++,
                 name: getRandomName(),
-                skill: skillLevel, 
+                skill: skillLevel, 
                 status: 'idle',
                 ticketsFixed: 0,
                 assignedTicket: null
@@ -339,7 +339,7 @@
             // 4. Update stats display
             renderStats();
         }
-        
+        
         /** The main game loop, runs every second (representing a day/cycle) */
         function gameLoop() {
             let dailySalaryCost = 0;
@@ -347,7 +347,7 @@
             // 1. Process Ticket Progress
             state.inProgressTickets.forEach(ticket => {
                 const engineer = state.engineers.find(e => e.id === ticket.engineerId);
-                if (!engineer) return; 
+                if (!engineer) return; 
 
                 // Calculate progress based on engineer skill and ticket complexity
                 const progressThisTick = (engineer.skill * 5) / ticket.complexity;
@@ -365,12 +365,12 @@
             });
 
             state.company.money -= dailySalaryCost;
-            
+            
             // 3. Clean up and Render
             state.inProgressTickets = state.inProgressTickets.filter(t => t.progress < PROGRESS_TO_COMPLETE);
 
             renderProgress();
-            renderEngineers(); 
+            renderEngineers(); 
             renderStats();
         }
 
@@ -383,7 +383,7 @@
             renderEngineers();
             renderProgress();
             renderStats();
-            updateAssignmentButton(); 
+            updateAssignmentButton(); 
         }
 
         /** Updates the available ticket list */
@@ -457,11 +457,11 @@
         window.attemptHire = attemptHire;
         window.selectTicket = selectTicket;
         window.selectEngineer = selectEngineer;
-        window.assignSelectedWork = assignSelectedWork; 
+        window.assignSelectedWork = assignSelectedWork; 
         
         // Start the game
-        state.company.money = 500; 
-        generateTicket(); 
+        state.company.money = 500; 
+        generateTicket(); 
         render();
         const gameInterval = setInterval(gameLoop, 1000); // Run game loop every second
     </script>
