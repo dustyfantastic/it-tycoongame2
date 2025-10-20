@@ -1,431 +1,422 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Tycoon</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: grid;
-            grid-template-areas:
-                "header header"
-                "tickets engineers"
-                "progress progress";
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-            background-color: #f4f7f6;
-            color: #333;
-        }
-        header {
-            grid-area: header;
-            text-align: center;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-        h1, h2 {
-            margin: 0;
-        }
-        h1 {
-            color: #2c3e50;
-        }
-        #stats {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #27ae60;
-        }
-        .container {
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-        #tickets { grid-area: tickets; }
-        #engineers { grid-area: engineers; }
-        #in-progress { grid-area: progress; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Tycoon</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: grid;
+            grid-template-areas:
+                "header header"
+                "tickets engineers"
+                "progress progress";
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        header {
+            grid-area: header;
+            text-align: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        h1, h2 {
+            margin: 0;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #stats {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        #tickets { grid-area: tickets; }
+        #engineers { grid-area: engineers; }
+        #in-progress { grid-area: progress; }
 
-        .ticket, .engineer {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .ticket:hover, .engineer.idle:hover {
-            border-color: #3498db;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        .engineer.idle {
-            background-color: #e8f5e9; /* Greenish */
-        }
-        .engineer.working {
-            background-color: #fff8e1; /* Yellowish */
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        .ticket.selected, .engineer.selected {
-            background-color: #aed6f1;
-            border-color: #3498db;
-        }
-        .progress-bar {
-            width: 100%;
-            background-color: #eee;
-            border-radius: 5px;
-            height: 20px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background-color: #2ecc71;
-            width: 0%;
-            transition: width 0.5s linear;
-        }
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-    </style>
+        .ticket, .engineer {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .ticket:hover, .engineer.idle:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .engineer.idle {
+            background-color: #e8f5e9; /* Greenish */
+        }
+        .engineer.working {
+            background-color: #fff8e1; /* Yellowish */
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .ticket.selected, .engineer.selected {
+            background-color: #aed6f1;
+            border-color: #3498db;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #eee;
+            border-radius: 5px;
+            height: 20px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #2ecc71;
+            width: 0%;
+            transition: width 0.5s linear;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
 </head>
 <body>
 
-    <header>
-        <h1>My IT Company 📈</h1>
-        <div id="stats">Money: $0 | Total Tickets Fixed: 0</div>
-    </header>
+    <header>
+        <h1>My IT Company 📈</h1>
+        <div id="stats">Money: $0 | Total Tickets Fixed: 0</div>
+    </header>
 
-    <div id="tickets" class="container">
-        <h2>Available Tickets</h2>
-        <button id="new-ticket-btn">Generate New Ticket</button>
-        <div id="ticket-list"></div>
-    </div>
+    <div id="tickets" class="container">
+        <h2>Available Tickets</h2>
+        <button id="new-ticket-btn">Generate New Ticket</button>
+        <div id="ticket-list"></div>
+    </div>
 
-    <div id="engineers" class="container">
-        <h2>Engineers</h2>
-        <div id="engineer-list"></div>
-    </div>
+    <div id="engineers" class="container">
+        <h2>Engineers</h2>
+        <div id="engineer-list"></div>
+                <button onclick="attemptHire(1)">Hire Junior (Skill 1) - $50</button>
+        <button onclick="attemptHire(2)">Hire Junior II (Skill 2) - $100</button>
+        <button onclick="attemptHire(3)">Hire Mid-Level (Skill 3) - $150</button>
+    </div>
 
-    <div id="in-progress" class="container">
-        <h2>Tickets In Progress</h2>
-        <div id="progress-list"></div>
-    </div>
+    <div id="in-progress" class="container">
+        <h2>Tickets In Progress</h2>
+        <div id="progress-list"></div>
+    </div>
 
-    <script>
-        // --- GAME STATE ---
-        let state = {
-            company: {
-                money: 0,
-                totalTicketsFixed: 0,
-            },
-            engineers: [
-                { id: 1, name: "Alice (Junior)", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
-                { id: 2, name: "Bob (Mid-Level)", skill: 3, status: 'idle', ticketsFixed: 0, assignedTicket: null },
-            ],
-            tickets: [],
-            nextTicketId: 1,
-            selectedTicket: null,
-            selectedEngineer: null
-        };
+    <script>
+        // --- GAME STATE ---
+        let state = {
+            company: {
+                money: 500, // Start with some money to be able to hire
+                totalTicketsFixed: 0,
+            },
+            engineers: [
+                { id: 1, name: "Alice", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
+                { id: 2, name: "Bob", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
+            ],
+            inProgressTickets: [], // Refactored list
+            tickets: [],
+            nextTicketId: 1,
+            nextEngineerId: 3,
+            selectedTicket: null,
+            selectedEngineer: null
+        };
 
-        // --- CONSTANTS ---
-        const TICKET_BASE_PAY = 50;
-        const PROGRESS_TO_COMPLETE = 100;
-        const PROMOTION_THRESHOLD = 5; // Promote every 5 tickets
+        // --- CONSTANTS ---
+        const TICKET_BASE_PAY = 50;
+        const PROGRESS_TO_COMPLETE = 100;
+        const PROMOTION_THRESHOLD = 5; // Promote every 5 tickets
+        const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; // Cost by skill level
+        const HOURLY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 }; // Daily salary cost per skill level
+        const JUNIOR_ENGINEER_NAMES = ["Charlie", "Dana", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"];
+        
+        // Rename elements for simplicity
+        const ticketListEl = document.getElementById('ticket-list');
+        const engineerListEl = document.getElementById('engineer-list');
+        const progressListEl = document.getElementById('progress-list');
+        const statsEl = document.getElementById('stats');
+        const newTicketBtn = document.getElementById('new-ticket-btn');
 
-        // --- DOM ELEMENTS ---
-        const ticketListEl = document.getElementById('ticket-list');
-        const engineerListEl = document.getElementById('engineer-list');
-        const progressListEl = document.getElementById('progress-list');
-        const statsEl = document.getElementById('stats');
-        const newTicketBtn = document.getElementById('new-ticket-btn');
 
-        // --- GAME LOGIC ---
+        // --- HELPER FUNCTIONS ---
 
-        /** Generates a new random ticket */
-        function generateTicket() {
-            const complexity = Math.floor(Math.random() * 5) + 1; // 1 to 5
-            const newTicket = {
-                id: state.nextTicketId++,
-                complexity: complexity,
-                progress: 0,
-            };
-            state.tickets.push(newTicket);
-            render();
-        }
+        function getEngineerTitle(skill) {
+            switch (skill) {
+                case 1: return 'Junior I';
+                case 2: return 'Junior II';
+                case 3: return 'Mid-Level';
+                case 4: return 'Senior';
+                case 5: return 'Principal';
+                default: return 'Trainee';
+            }
+        }
 
-        /** Handles selecting a ticket */
-        function selectTicket(ticketId) {
-            state.selectedTicket = ticketId;
-            state.selectedEngineer = null; // Clear engineer selection
-            render();
-            attemptAssignment();
-        }
+        function getRandomName() {
+            // Get names not currently in use
+            const usedNames = state.engineers.map(e => e.name);
+            const availableNames = JUNIOR_ENGINEER_NAMES.filter(name => !usedNames.includes(name));
+            
+            return availableNames.length > 0
+                ? availableNames[Math.floor(Math.random() * availableNames.length)]
+                : `Engineer ${state.nextEngineerId}`;
+        }
 
-        /** Handles selecting an engineer */
-        function selectEngineer(engineerId) {
-            const engineer = state.engineers.find(e => e.id === engineerId);
-            if (engineer.status === 'idle') {
-                state.selectedEngineer = engineerId;
-                render();
-                attemptAssignment();
-            } else {
-                alert("This engineer is already working!");
-            }
-        }
+        // --- GAME LOGIC ---
 
-        /** Tries to assign the selected ticket to the selected engineer */
-        function attemptAssignment() {
-            if (!state.selectedTicket || !state.selectedEngineer) return;
+        /** Generates a new random ticket */
+        function generateTicket() {
+            const complexity = Math.floor(Math.random() * 5) + 1; // 1 to 5
+            const newTicket = {
+                id: state.nextTicketId++,
+                complexity: complexity,
+                progress: 0,
+            };
+            state.tickets.push(newTicket);
+            render();
+        }
 
-            const ticket = state.tickets.find(t => t.id === state.selectedTicket);
-            const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
+        /** Handles hiring a new engineer at a specific skill level */
+        function attemptHire(skillLevel) {
+            const cost = HIRE_COSTS[skillLevel];
+            if (state.company.money < cost) {
+                alert(`You need $${cost} to hire a ${getEngineerTitle(skillLevel)}!`);
+                return;
+            }
 
-            if (ticket && engineer && engineer.status === 'idle') {
-                // Assign
-                engineer.status = 'working';
-                engineer.assignedTicket = ticket.id;
-                
-                // Remove ticket from available list
-                state.tickets = state.tickets.filter(t => t.id !== ticket.id);
-                
-                // Add to engineer's workload (for tracking)
-                ticket.engineerId = engineer.id;
-                
-                // Clear selections
-                state.selectedTicket = null;
-                state.selectedEngineer = null;
-                
-                render();
-            }
-        }
+            state.company.money -= cost;
+            
+            const newEngineer = {
+                id: state.nextEngineerId++,
+                name: getRandomName(),
+                skill: skillLevel, 
+                status: 'idle',
+                ticketsFixed: 0,
+                assignedTicket: null
+            };
+            state.engineers.push(newEngineer);
+            render();
+        }
 
-        /** The main game loop, runs every second */
-        function gameLoop() {
-            // Find all working engineers
-            const workingEngineers = state.engineers.filter(e => e.status === 'working');
+        /** Handles selecting a ticket */
+        function selectTicket(ticketId) {
+            state.selectedTicket = ticketId;
+            state.selectedEngineer = null; // Clear engineer selection
+            render();
+            attemptAssignment();
+        }
 
-            workingEngineers.forEach(engineer => {
-                const ticket = progressListEl.querySelector(`[data-ticket-id="${engineer.assignedTicket}"]`);
-                if (!ticket) {
-                    // This should not happen, but good to check
-                    // The ticket object is now attached to the engineer
-                    // Let's find the *actual* ticket object in the progress list's HTML representation
-                    // A better way is to have an "in-progress" array in the state.
-                    // For this MVP, let's find the ticket associated with the engineer
-                    const ticketData = findTicketInDom(engineer.assignedTicket);
-                    if (!ticketData) return;
-                }
+        /** Handles selecting an engineer */
+        function selectEngineer(engineerId) {
+            const engineer = state.engineers.find(e => e.id === engineerId);
+            if (engineer.status === 'idle') {
+                state.selectedEngineer = engineerId;
+                render();
+                attemptAssignment();
+            } else {
+                alert("This engineer is already working!");
+            }
+        }
 
-                const ticketData = findTicketInDom(engineer.assignedTicket);
-                if (!ticketData) return; // Should be in the DOM, added by render()
-                
-                // Calculate progress made this tick
-                // Higher skill = more progress
-                // Higher complexity = less progress
-                const progressThisTick = (engineer.skill * 5) / ticketData.complexity;
-                
-                ticketData.progress += progressThisTick;
+        /** Tries to assign the selected ticket to the selected engineer */
+        function attemptAssignment() {
+            if (!state.selectedTicket || !state.selectedEngineer) return;
 
-                if (ticketData.progress >= PROGRESS_TO_COMPLETE) {
-                    completeTicket(engineer, ticketData);
-                }
-            });
-            
-            // Update the UI for progress bars
-            renderProgress();
-        }
+            const ticketIndex = state.tickets.findIndex(t => t.id === state.selectedTicket);
+            const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
+            const ticket = state.tickets[ticketIndex];
 
-        /** Finds a ticket object by its ID from the DOM (a bit of a hack for this MVP) */
-        function findTicketInDom(ticketId) {
-            // In a real app, 'in-progress' tickets would be an array in the `state`
-            // For now, let's find the engineer and their ticket
-            const engineer = state.engineers.find(e => e.assignedTicket === ticketId);
-            if (!engineer) return null;
-            
-            // This is messy, let's refactor.
-            // We need a list of 'in_progress' tickets in the state.
-            // Let's adjust `attemptAssignment`
-            
-            // --- REFACTOR ---
-            // Let's add an `inProgressTickets` array to the state
-            // This function is no longer needed. See new `attemptAssignment` and `gameLoop`
-            return null; 
-        }
+            if (ticket && engineer && engineer.status === 'idle') {
+                // Assign
+                engineer.status = 'working';
+                engineer.assignedTicket = ticket.id;
+                ticket.engineerId = engineer.id; // Link ticket to engineer
+                
+                // Move ticket from 'available' to 'inProgress'
+                state.inProgressTickets.push(ticket);
+                state.tickets.splice(ticketIndex, 1);
+                
+                // Clear selections
+                state.selectedTicket = null;
+                state.selectedEngineer = null;
+                
+                render();
+            }
+        }
 
-        /* --- REFACTORED STATE AND FUNCTIONS --- */
+        /** Finalizes a ticket */
+        function completeTicket(engineer, ticket) {
+            // 1. Pay the company
+            const payment = (ticket.complexity * TICKET_BASE_PAY);
+            state.company.money += payment;
+            state.company.totalTicketsFixed++;
+            
+            // 2. Update engineer stats
+            engineer.ticketsFixed++;
+            engineer.status = 'idle';
+            engineer.assignedTicket = null;
+            
+            // 3. Check for promotion
+            if (engineer.ticketsFixed % PROMOTION_THRESHOLD === 0 && engineer.skill < 5) {
+                engineer.skill++;
+                alert(`${engineer.name} has been promoted to ${getEngineerTitle(engineer.skill)}! 🎉`);
+            }
+
+            // 4. Update stats display
+            renderStats();
+        }
         
-        state.inProgressTickets = []; // Add this to the state object
+        /** The main game loop, runs every second (representing a day/cycle) */
+        function gameLoop() {
+            let dailySalaryCost = 0;
 
-        // REVISED attemptAssignment
-        function attemptAssignment() {
-            if (!state.selectedTicket || !state.selectedEngineer) return;
+            // 1. Process Ticket Progress
+            state.inProgressTickets.forEach(ticket => {
+                const engineer = state.engineers.find(e => e.id === ticket.engineerId);
+                if (!engineer) return; 
 
-            const ticketIndex = state.tickets.findIndex(t => t.id === state.selectedTicket);
-            const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
-            const ticket = state.tickets[ticketIndex];
+                const progressThisTick = (engineer.skill * 5) / ticket.complexity;
+                ticket.progress += progressThisTick;
 
-            if (ticket && engineer && engineer.status === 'idle') {
-                // Assign
-                engineer.status = 'working';
-                engineer.assignedTicket = ticket.id;
-                ticket.engineerId = engineer.id; // Link ticket to engineer
-                
-                // Move ticket from 'available' to 'inProgress'
-                state.inProgressTickets.push(ticket);
-                state.tickets.splice(ticketIndex, 1);
-                
-                // Clear selections
-                state.selectedTicket = null;
-                state.selectedEngineer = null;
-                
-                render();
-            }
-        }
+                if (ticket.progress >= PROGRESS_TO_COMPLETE) {
+                    completeTicket(engineer, ticket);
+                }
+            });
 
-        // REVISED gameLoop
-        function gameLoop() {
-            state.inProgressTickets.forEach(ticket => {
-                const engineer = state.engineers.find(e => e.id === ticket.engineerId);
-                if (!engineer) return; // Engineer not found?
+            // 2. Deduct Daily Salaries (Operating Costs)
+            state.engineers.forEach(engineer => {
+                const salary = HOURLY_SALARIES[engineer.skill] || 5; // Default salary
+                dailySalaryCost += salary;
+            });
 
-                // Calculate progress made this tick
-                const progressThisTick = (engineer.skill * 5) / ticket.complexity;
-                ticket.progress += progressThisTick;
+            state.company.money -= dailySalaryCost;
+            
+            // Check for Game Over (Optional but recommended)
+            if (state.company.money < 0) {
+                // To prevent money from going too negative visually
+                state.company.money = 0; 
+                // In a full game, you'd stop the loop here
+                // alert("Game Over! You ran out of money."); 
+            }
 
-                if (ticket.progress >= PROGRESS_TO_COMPLETE) {
-                    completeTicket(engineer, ticket);
-                }
-            });
+            // 3. Clean up and Render
+            state.inProgressTickets = state.inProgressTickets.filter(t => t.progress < PROGRESS_TO_COMPLETE);
 
-            // Filter out completed tickets *after* iterating
-            state.inProgressTickets = state.inProgressTickets.filter(t => t.progress < PROGRESS_TO_COMPLETE);
-
-            renderProgress();
-            renderEngineers(); // Update engineer status
-        }
-        
-        /** Finalizes a ticket */
-        function completeTicket(engineer, ticket) {
-            // 1. Pay the company
-            const payment = (ticket.complexity * TICKET_BASE_PAY);
-            state.company.money += payment;
-            state.company.totalTicketsFixed++;
-            
-            // 2. Update engineer stats
-            engineer.ticketsFixed++;
-            engineer.status = 'idle';
-            engineer.assignedTicket = null;
-            
-            // 3. Check for promotion
-            if (engineer.ticketsFixed % PROMOTION_THRESHOLD === 0 && engineer.skill < 5) {
-                engineer.skill++;
-                engineer.name = engineer.name.split(' (')[0]; // Remove old title
-                let title = '';
-                if(engineer.skill === 2) title = 'Junior II';
-                else if(engineer.skill === 3) title = 'Mid-Level';
-                else if(engineer.skill === 4) title = 'Senior';
-                else if(engineer.skill === 5) title = 'Principal';
-                engineer.name = `${engineer.name} (${title})`;
-            }
-
-            // 4. Update stats display
-            renderStats();
-            // The ticket will be removed from the inProgress list by the game loop
-        }
+            renderProgress();
+            renderEngineers(); 
+            renderStats();
+        }
 
 
-        // --- RENDERING FUNCTIONS ---
-        
-        /** Renders everything */
-        function render() {
-            renderTickets();
-            renderEngineers();
-            renderProgress();
-            renderStats();
-        }
+        // --- RENDERING FUNCTIONS (Kept mostly the same) ---
+        
+        /** Renders everything */
+        function render() {
+            renderTickets();
+            renderEngineers();
+            renderProgress();
+            renderStats();
+        }
 
-        /** Updates the available ticket list */
-        function renderTickets() {
-            ticketListEl.innerHTML = '';
-            if (state.tickets.length === 0) {
-                ticketListEl.innerHTML = '<p>No new tickets. Click the button!</p>';
-            }
-            state.tickets.forEach(ticket => {
-                const selectedClass = ticket.id === state.selectedTicket ? 'selected' : '';
-                ticketListEl.innerHTML += `
-                    <div class="ticket ${selectedClass}" onclick="selectTicket(${ticket.id})">
-                        <strong>Ticket #${ticket.id}</strong>
-                        <p>Complexity: ${'★'.repeat(ticket.complexity)}${'☆'.repeat(5 - ticket.complexity)}</p>
-                    </div>
-                `;
-            });
-        }
+        /** Updates the available ticket list */
+        function renderTickets() {
+            ticketListEl.innerHTML = '';
+            if (state.tickets.length === 0) {
+                ticketListEl.innerHTML = '<p>No new tickets. Click the button!</p>';
+            }
+            state.tickets.forEach(ticket => {
+                const selectedClass = ticket.id === state.selectedTicket ? 'selected' : '';
+                ticketListEl.innerHTML += `
+                    <div class="ticket ${selectedClass}" onclick="selectTicket(${ticket.id})">
+                        <strong>Ticket #${ticket.id}</strong>
+                        <p>Complexity: ${'★'.repeat(ticket.complexity)}${'☆'.repeat(5 - ticket.complexity)}</p>
+                    </div>
+                `;
+            });
+        }
 
-        /** Updates the engineer list */
-        function renderEngineers() {
-            engineerListEl.innerHTML = '';
-            state.engineers.forEach(eng => {
-                const selectedClass = eng.id === state.selectedEngineer ? 'selected' : '';
-                engineerListEl.innerHTML += `
-                    <div class="engineer ${eng.status} ${selectedClass}" onclick="selectEngineer(${eng.id})">
-                        <strong>${eng.name}</strong>
-                        <p>Skill: ${'✦'.repeat(eng.skill)}${'✧'.repeat(5 - eng.skill)}</p>
-                        <p>Status: ${eng.status === 'idle' ? 'Idle 🟢' : `Working on Ticket #${eng.assignedTicket} 🟡`}</p>
-                        <p>Tickets Fixed: ${eng.ticketsFixed}</p>
-                    </div>
-                `;
-            });
-        }
+        /** Updates the engineer list */
+        function renderEngineers() {
+            engineerListEl.innerHTML = '';
+            state.engineers.forEach(eng => {
+                const selectedClass = eng.id === state.selectedEngineer ? 'selected' : '';
+                const fullName = `${eng.name} (${getEngineerTitle(eng.skill)})`;
+                const salaryCost = HOURLY_SALARIES[eng.skill] || '??';
 
-        /** Updates the in-progress list */
-        function renderProgress() {
-            progressListEl.innerHTML = '';
-            if (state.inProgressTickets.length === 0) {
-                progressListEl.innerHTML = '<p>No tickets being worked on.</p>';
-                return;
-            }
-            state.inProgressTickets.forEach(ticket => {
-                const engineer = state.engineers.find(e => e.id === ticket.engineerId);
-                const progressPercent = Math.min(100, (ticket.progress / PROGRESS_TO_COMPLETE) * 100);
-                progressListEl.innerHTML += `
-                    <div class="ticket" data-ticket-id="${ticket.id}">
-                        <strong>Ticket #${ticket.id} (Complexity: ${ticket.complexity})</strong>
-                        <p>Assigned to: ${engineer ? engineer.name : '???'}</p>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
-                        </div>
-                        <p>${Math.floor(progressPercent)}% complete</p>
-                    </div>
-                `;
-            });
-        }
+                engineerListEl.innerHTML += `
+                    <div class="engineer ${eng.status} ${selectedClass}" onclick="selectEngineer(${eng.id})">
+                        <strong>${fullName}</strong>
+                        <p>Skill: ${'✦'.repeat(eng.skill)}${'✧'.repeat(5 - eng.skill)} (Salary: $${salaryCost}/Day)</p>
+                        <p>Status: ${eng.status === 'idle' ? 'Idle 🟢' : `Working on Ticket #${eng.assignedTicket} 🟡`}</p>
+                        <p>Tickets Fixed: ${eng.ticketsFixed}</p>
+                    </div>
+                `;
+            });
+        }
 
-        /** Updates the main company stats */
-        function renderStats() {
-            statsEl.innerHTML = `Money: $${state.company.money} | Total Tickets Fixed: ${state.company.totalTicketsFixed}`;
-        }
+        /** Updates the in-progress list */
+        function renderProgress() {
+            progressListEl.innerHTML = '';
+            if (state.inProgressTickets.length === 0) {
+                progressListEl.innerHTML = '<p>No tickets being worked on.</p>';
+                return;
+            }
+            state.inProgressTickets.forEach(ticket => {
+                const engineer = state.engineers.find(e => e.id === ticket.engineerId);
+                const progressPercent = Math.min(100, (ticket.progress / PROGRESS_TO_COMPLETE) * 100);
+                progressListEl.innerHTML += `
+                    <div class="ticket" data-ticket-id="${ticket.id}">
+                        <strong>Ticket #${ticket.id} (Complexity: ${ticket.complexity})</strong>
+                        <p>Assigned to: ${engineer ? engineer.name + ' (' + getEngineerTitle(engineer.skill) + ')' : '???'}</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <p>${Math.floor(progressPercent)}% complete</p>
+                    </div>
+                `;
+            });
+        }
 
-        // --- INITIALIZE ---
-        newTicketBtn.addEventListener('click', generateTicket);
-        
-        // Start the game
-        generateTicket(); // Start with one ticket
-        render();
-        setInterval(gameLoop, 1000); // Run game loop every second
+        /** Updates the main company stats */
+        function renderStats() {
+            statsEl.innerHTML = `Money: $${Math.floor(state.company.money)} | Total Tickets Fixed: ${state.company.totalTicketsFixed}`;
+        }
 
-    </script>
+        // --- INITIALIZE ---
+        newTicketBtn.addEventListener('click', generateTicket);
+        
+        // Expose global function for onclick in HTML
+        window.attemptHire = attemptHire;
+        window.selectTicket = selectTicket;
+        window.selectEngineer = selectEngineer;
+        
+        // Start the game
+        state.company.money = 500; // Give starting cash
+        generateTicket(); // Start with one ticket
+        render();
+        setInterval(gameLoop, 1000); // Run game loop every second
+    </script>
 </body>
 </html>
