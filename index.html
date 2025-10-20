@@ -11,6 +11,7 @@
             grid-template-areas:
                 "header header"
                 "tickets engineers"
+                "actions actions"
                 "progress progress";
             grid-template-columns: 1fr 1fr;
             gap: 20px;
@@ -27,9 +28,6 @@
         h1, h2 {
             margin: 0;
         }
-        h1 {
-            color: #2c3e50;
-        }
         #stats {
             font-size: 1.2em;
             font-weight: bold;
@@ -41,9 +39,17 @@
             padding: 20px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        #tickets { grid-area: tickets; }
+        
+        /* STYLING CHANGE: Available Tickets container is now yellow */
+        #tickets { 
+            grid-area: tickets;
+            background-color: #fffac8; /* A nice light yellow */
+            border: 1px solid #f1c40f; 
+        }
+        
         #engineers { grid-area: engineers; }
         #in-progress { grid-area: progress; }
+        #actions { grid-area: actions; text-align: center; }
 
         .ticket, .engineer {
             border: 1px solid #ccc;
@@ -52,20 +58,21 @@
             margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
+            background-color: #ffffff; /* Ensure inner tickets are white */
         }
         .ticket:hover, .engineer.idle:hover {
             border-color: #3498db;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .engineer.idle {
-            background-color: #e8f5e9; /* Greenish */
+            background-color: #e8f5e9; 
         }
         .engineer.working {
-            background-color: #fff8e1; /* Yellowish */
+            background-color: #fff8e1; 
             cursor: not-allowed;
             opacity: 0.7;
         }
-        /* MODIFIED: Custom colors for selection */
+        /* Custom colors for selection */
         .ticket.selected {
             background-color: #f7cac9; /* Light Red/Pink for Ticket Selection */
             border: 2px solid #e74c3c;
@@ -86,7 +93,7 @@
             height: 100%;
             background-color: #2ecc71;
             width: 0%;
-            transition: width 0.5s linear;
+            transition: none; 
         }
         button {
             display: block;
@@ -100,16 +107,29 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: #2980b9;
         }
-        /* NEW: Hire button styling based on level for visual distinction */
-        .hire-button-1 { background-color: #2ecc71; } /* Green */
-        .hire-button-2 { background-color: #f1c40f; } /* Yellow */
-        .hire-button-3 { background-color: #e67e22; } /* Orange */
-        .hire-button-1:hover { background-color: #27ad60; }
-        .hire-button-2:hover { background-color: #f39c12; }
-        .hire-button-3:hover { background-color: #d35400; }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        /* Hire button styling based on level for visual distinction */
+        .hire-button-1 { background-color: #2ecc71; } 
+        .hire-button-2 { background-color: #f1c40f; } 
+        .hire-button-3 { background-color: #e67e22; } 
+        .hire-button-1:hover:not(:disabled) { background-color: #27ad60; }
+        .hire-button-2:hover:not(:disabled) { background-color: #f39c12; }
+        .hire-button-3:hover:not(:disabled) { background-color: #d35400; }
+
+        #assign-button {
+            background-color: #e74c3c; 
+            font-size: 1.5em;
+            width: 50%;
+        }
+        #assign-button:hover:not(:disabled) {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -131,6 +151,10 @@
                 <button class="hire-button-1" onclick="attemptHire(1)">Hire Junior (Skill 1) - $50</button>
         <button class="hire-button-2" onclick="attemptHire(2)">Hire Junior II (Skill 2) - $100</button>
         <button class="hire-button-3" onclick="attemptHire(3)">Hire Mid-Level (Skill 3) - $150</button>
+    </div>
+
+    <div id="actions">
+        <button id="assign-button" onclick="assignSelectedWork()" disabled>Select Ticket & Engineer to Assign 👷</button>
     </div>
 
     <div id="in-progress" class="container">
@@ -171,6 +195,7 @@
         const progressListEl = document.getElementById('progress-list');
         const statsEl = document.getElementById('stats');
         const newTicketBtn = document.getElementById('new-ticket-btn');
+        const assignBtn = document.getElementById('assign-button'); 
 
 
         // --- HELPER FUNCTIONS ---
@@ -194,6 +219,22 @@
                 ? availableNames[Math.floor(Math.random() * availableNames.length)]
                 : `Engineer ${state.nextEngineerId}`;
         }
+        
+        /** Updates the visibility and text of the Assign button */
+        function updateAssignmentButton() {
+            const ticketSelected = state.selectedTicket !== null;
+            const engineerSelected = state.selectedEngineer !== null;
+
+            if (ticketSelected && engineerSelected) {
+                const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
+                assignBtn.disabled = false;
+                assignBtn.textContent = `Assign Ticket #${state.selectedTicket} to ${engineer.name}`;
+            } else {
+                assignBtn.disabled = true;
+                assignBtn.textContent = 'Select Ticket & Engineer to Assign 👷';
+            }
+        }
+
 
         // --- GAME LOGIC ---
 
@@ -209,28 +250,27 @@
             render();
         }
 
-        /** Handles selecting a ticket */
+        /** Handles selecting a ticket (with toggle logic) */
         function selectTicket(ticketId) {
             state.selectedTicket = ticketId === state.selectedTicket ? null : ticketId; // Toggle selection
-            state.selectedEngineer = null; // Clear engineer selection
             render();
-            attemptAssignment();
+            updateAssignmentButton(); // Update button state
         }
 
-        /** Handles selecting an engineer */
+        /** Handles selecting an engineer (with toggle logic) */
         function selectEngineer(engineerId) {
             const engineer = state.engineers.find(e => e.id === engineerId);
             if (engineer.status === 'idle') {
                 state.selectedEngineer = engineerId === state.selectedEngineer ? null : engineerId; // Toggle selection
                 render();
-                attemptAssignment();
+                updateAssignmentButton(); // Update button state
             } else {
                 alert("This engineer is already working!");
             }
         }
 
-        /** Tries to assign the selected ticket to the selected engineer */
-        function attemptAssignment() {
+        /** Triggered ONLY by the new Assign button */
+        function assignSelectedWork() {
             if (!state.selectedTicket || !state.selectedEngineer) return;
 
             const ticketIndex = state.tickets.findIndex(t => t.id === state.selectedTicket);
@@ -309,6 +349,7 @@
                 const engineer = state.engineers.find(e => e.id === ticket.engineerId);
                 if (!engineer) return; 
 
+                // Calculate progress based on engineer skill and ticket complexity
                 const progressThisTick = (engineer.skill * 5) / ticket.complexity;
                 ticket.progress += progressThisTick;
 
@@ -325,13 +366,6 @@
 
             state.company.money -= dailySalaryCost;
             
-            // Optional Game Over Check
-            if (state.company.money < 0 && state.engineers.length > 0) {
-                // In a real game, you'd stop the loop here. 
-                // For now, we'll just allow it to go negative.
-            }
-
-
             // 3. Clean up and Render
             state.inProgressTickets = state.inProgressTickets.filter(t => t.progress < PROGRESS_TO_COMPLETE);
 
@@ -349,13 +383,14 @@
             renderEngineers();
             renderProgress();
             renderStats();
+            updateAssignmentButton(); 
         }
 
         /** Updates the available ticket list */
         function renderTickets() {
             ticketListEl.innerHTML = '';
             if (state.tickets.length === 0) {
-                ticketListEl.innerHTML = '<p>No new tickets. Click the button!</p>';
+                ticketListEl.innerHTML = '<p>No new tickets. Click the button above to generate one!</p>';
             }
             state.tickets.forEach(ticket => {
                 const selectedClass = ticket.id === state.selectedTicket ? 'selected' : '';
@@ -387,11 +422,11 @@
             });
         }
 
-        /** Updates the in-progress list */
+        /** Updates the in-progress list, which includes the graphical progress bar */
         function renderProgress() {
             progressListEl.innerHTML = '';
             if (state.inProgressTickets.length === 0) {
-                progressListEl.innerHTML = '<p>No tickets being worked on.</p>';
+                progressListEl.innerHTML = '<p>No tickets being worked on. Assign one now!</p>';
                 return;
             }
             state.inProgressTickets.forEach(ticket => {
@@ -422,12 +457,13 @@
         window.attemptHire = attemptHire;
         window.selectTicket = selectTicket;
         window.selectEngineer = selectEngineer;
+        window.assignSelectedWork = assignSelectedWork; 
         
         // Start the game
         state.company.money = 500; 
         generateTicket(); 
         render();
-        setInterval(gameLoop, 1000); // Run game loop every second
+        const gameInterval = setInterval(gameLoop, 1000); // Run game loop every second
     </script>
 </body>
 </html>
