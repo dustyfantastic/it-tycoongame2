@@ -4,159 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Tycoon</title>
-<style>
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        display: grid;
-        grid-template-areas:
-            "header header"
-            "tickets engineers"
-            "actions actions"
-            "progress progress";
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        padding: 20px;
-        background-color: #e8f5e9; /* Changed to Light Green */
-        color: #333;
-        
-        /* --- START: Centering Changes --- */
-        max-width: 1000px; /* Set a maximum width for the whole content area */
-        margin: 0 auto; /* Center the content area horizontally */
-        /* --- END: Centering Changes --- */
-    }
-    header {
-        grid-area: header;
-        text-align: center;
-        border-bottom: 2px solid #ddd;
-        padding-bottom: 10px;
-    }
-    h1, h2 {
-        margin: 0;
-    }
-    #stats {
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #27ae60;
-    }
-    .container {
-        background-color: #ffffff;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-    
-    /* STYLING CHANGE: Available Tickets container is now yellow */
-    #tickets { 
-        grid-area: tickets;
-        background-color: #fffac8; /* A nice light yellow */
-        border: 1px solid #f1c40f; 
-    }
-    
-    #engineers { grid-area: engineers; }
-    #in-progress { grid-area: progress; }
-    #actions { grid-area: actions; text-align: center; }
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: grid;
+            grid-template-areas:
+                "header header"
+                "tickets engineers"
+                "actions actions"
+                "progress progress";
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            background-color: #e8f5e9; /* Changed to Light Green */
+            color: #333;
+            max-width: 1000px; /* Centering Change */
+            margin: 0 auto; /* Centering Change */
+        }
+        header {
+            grid-area: header;
+            text-align: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        h1, h2 {
+            margin: 0;
+        }
+        #stats {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        #tickets { 
+            grid-area: tickets;
+            background-color: #fffac8; /* A nice light yellow */
+            border: 1px solid #f1c40f; 
+        }
+        
+        #engineers { grid-area: engineers; }
+        #in-progress { grid-area: progress; }
+        #actions { grid-area: actions; text-align: center; }
 
-    .ticket, .engineer {
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 10px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background-color: #ffffff; /* Ensure inner tickets are white */
-    }
-    .ticket:hover, .engineer.idle:hover {
-        border-color: #3498db;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .engineer.idle {
-        background-color: #e8f5e9; 
-    }
-    .engineer.working {
-        background-color: #fff8e1; 
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-    /* Custom colors for selection */
-    .ticket.selected {
-        background-color: #f7cac9; /* Light Red/Pink for Ticket Selection */
-        border: 2px solid #e74c3c;
-    }
-    .engineer.selected {
-        background-color: #bbded6; /* Light Teal/Green for Engineer Selection */
-        border: 2px solid #16a085;
-    }
-    .progress-bar {
-        width: 100%;
-        background-color: #eee;
-        border-radius: 5px;
-        height: 20px;
-        margin-top: 5px;
-        overflow: hidden;
-    }
-    .progress-fill {
-        height: 100%;
-        background-color: #2ecc71;
-        width: 0%;
-        transition: none; 
-    }
-    
-    /* --- Button Styling (from previous update) --- */
-    button {
-        width: 100%; 
-        padding: 12px 10px; 
-        background-color: #2ecc71; 
-        color: white;
-        border: 2px solid #2ecc71; 
-        border-radius: 4px; 
-        font-size: 1em;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 10px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: background-color 0.2s, border-color 0.2s;
-    }
-    button:hover:not(:disabled) {
-        background-color: #27ad60; 
-        border-color: #27ad60;
-    }
-    button:disabled {
-        background-color: #cccccc;
-        border-color: #cccccc;
-        cursor: not-allowed;
-    }
+        .ticket, .engineer {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #ffffff; /* Ensure inner tickets are white */
+        }
+        .ticket:hover, .engineer.idle:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .engineer.idle {
+            background-color: #e8f5e9; 
+        }
+        .engineer.working {
+            background-color: #fff8e1; 
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* CUSTOM: Both selected ticket and engineer use the same light red/pink highlight */
+        .ticket.selected, .engineer.selected {
+            background-color: #f7cac9; /* Light Red/Pink for unified Selection */
+            border: 2px solid #e74c3c;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            background-color: #eee;
+            border-radius: 5px;
+            height: 20px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #2ecc71;
+            width: 0%;
+            transition: none; 
+        }
+        
+        /* Button Styling (Green Squares/Blocks) */
+        button {
+            width: 100%; 
+            padding: 12px 10px; 
+            background-color: #2ecc71; 
+            color: white;
+            border: 2px solid #2ecc71; 
+            border-radius: 4px; 
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        button:hover:not(:disabled) {
+            background-color: #27ad60; 
+            border-color: #27ad60;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            border-color: #cccccc;
+            cursor: not-allowed;
+        }
+        /* Hire button styling based on level for visual distinction */
+        .hire-button-1 { background-color: #2ecc71; border-color: #2ecc71;} 
+        .hire-button-2 { background-color: #f1c40f; border-color: #f1c40f; } 
+        .hire-button-3 { background-color: #e67e22; border-color: #e67e22; } 
+        .hire-button-1:hover:not(:disabled) { background-color: #27ad60; border-color: #27ad60; }
+        .hire-button-2:hover:not(:disabled) { background-color: #f39c12; border-color: #f39c12; }
+        .hire-button-3:hover:not(:disabled) { background-color: #d35400; border-color: #d35400; }
 
-    /* Hire button styling based on level for visual distinction - now more solid */
-    .hire-button-1 { background-color: #2ecc71; border-color: #2ecc71;} 
-    .hire-button-2 { background-color: #f1c40f; border-color: #f1c40f; } 
-    .hire-button-3 { background-color: #e67e22; border-color: #e67e22; } 
-    .hire-button-1:hover:not(:disabled) { background-color: #27ad60; border-color: #27ad60; }
-    .hire-button-2:hover:not(:disabled) { background-color: #f39c12; border-color: #f39c12; }
-    .hire-button-3:hover:not(:disabled) { background-color: #d35400; border-color: #d35400; }
-
-    #assign-button {
-        background-color: #e74c3c; 
-        border-color: #e74c3c;
-        font-size: 1.3em;
-        width: 60%;
-        margin: 10px auto; 
-        display: block;
-    }
-    #assign-button:hover:not(:disabled) {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-
-    #new-ticket-btn {
-        background-color: #3498db;
-        border-color: #3498db;
-    }
-    #new-ticket-btn:hover:not(:disabled) {
-        background-color: #2980b9;
-        border-color: #2980b9;
-    }
-</style>
+        #assign-button {
+            background-color: #e74c3c; 
+            border-color: #e74c3c;
+            font-size: 1.3em;
+            width: 60%;
+            margin: 10px auto; 
+            display: block;
+        }
+        #assign-button:hover:not(:disabled) {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+        #new-ticket-btn {
+            background-color: #3498db;
+            border-color: #3498db;
+            margin-bottom: 10px;
+        }
+        #new-ticket-btn:hover:not(:disabled) {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        /* Style for the new control */
+        #ticket-speed-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        #ticket-speed-control label {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        #ticket-speed-selector {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #ffffff;
+        }
+    </style>
 </head>
 <body>
 
@@ -167,14 +179,23 @@
 
     <div id="tickets" class="container">
         <h2>Available Tickets</h2>
-        <button id="new-ticket-btn">Generate New Ticket</button>
+                <div id="ticket-speed-control">
+            <label for="ticket-speed-selector">Auto-Generate Speed:</label>
+            <select id="ticket-speed-selector" onchange="updateTicketGenerationSpeed(this.value)">
+                <option value="20000">Slow (1 per 20s)</option>
+                <option value="15000" selected>Medium (1 per 15s)</option>
+                <option value="10000">Fast (1 per 10s)</option>
+                <option value="5000">Crazy (1 per 5s)</option>
+            </select>
+        </div>
+        <button id="new-ticket-btn">Generate New Ticket Instantly</button>
         <div id="ticket-list"></div>
     </div>
 
     <div id="engineers" class="container">
         <h2>Engineers</h2>
         <div id="engineer-list"></div>
-                <button class="hire-button-1" onclick="attemptHire(1)">Hire Junior (Skill 1) - $50</button>
+        <button class="hire-button-1" onclick="attemptHire(1)">Hire Junior (Skill 1) - $50</button>
         <button class="hire-button-2" onclick="attemptHire(2)">Hire Junior II (Skill 2) - $100</button>
         <button class="hire-button-3" onclick="attemptHire(3)">Hire Mid-Level (Skill 3) - $150</button>
     </div>
@@ -208,12 +229,16 @@
         };
 
         // --- CONSTANTS ---
-        const TICKET_BASE_PAY = 50;
+        const TICKET_PAY_PER_STAR = 20; // Changed base pay logic for variable reward
         const PROGRESS_TO_COMPLETE = 100;
         const PROMOTION_THRESHOLD = 5; 
         const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; 
         const HOURLY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 };
         const JUNIOR_ENGINEER_NAMES = ["Charlie", "Dana", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"];
+        
+        // Interval variables
+        let gameInterval;
+        let ticketInterval;
         
         // Rename elements for simplicity
         const ticketListEl = document.getElementById('ticket-list');
@@ -254,7 +279,7 @@
             if (ticketSelected && engineerSelected) {
                 const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
                 assignBtn.disabled = false;
-                assignBtn.textContent = `Assign Ticket #${state.selectedTicket} to ${engineer.name}`;
+                assignBtn.textContent = `Assign Ticket #${state.selectedTicket} to ${engineer.name} 🛠️`;
             } else {
                 assignBtn.disabled = true;
                 assignBtn.textContent = 'Select Ticket & Engineer to Assign 👷';
@@ -273,7 +298,7 @@
                 progress: 0,
             };
             state.tickets.push(newTicket);
-            render();
+            renderTickets();
         }
 
         /** Handles selecting a ticket (with toggle logic) */
@@ -344,10 +369,10 @@
         }
 
 
-        /** Finalizes a ticket */
+        /** Finalizes a ticket and calculates the variable payment */
         function completeTicket(engineer, ticket) {
-            // 1. Pay the company
-            const payment = (ticket.complexity * TICKET_BASE_PAY);
+            // 1. Pay the company based on complexity (e.g., 5-star is $100, 1-star is $20)
+            const payment = (ticket.complexity * TICKET_PAY_PER_STAR);
             state.company.money += payment;
             state.company.totalTicketsFixed++;
             
@@ -366,7 +391,7 @@
             renderStats();
         }
         
-        /** The main game loop, runs every second (representing a day/cycle) */
+        /** The main game loop, runs every two seconds (representing a day/cycle) */
         function gameLoop() {
             let dailySalaryCost = 0;
 
@@ -399,6 +424,15 @@
             renderEngineers(); 
             renderStats();
         }
+        
+        /** Resets and starts the ticket generation interval based on user selection */
+        function updateTicketGenerationSpeed(intervalMs) {
+            if (ticketInterval) {
+                clearInterval(ticketInterval);
+            }
+            // Convert string value to integer for setInterval
+            ticketInterval = setInterval(generateTicket, parseInt(intervalMs, 10));
+        }
 
 
         // --- RENDERING FUNCTIONS ---
@@ -416,14 +450,17 @@
         function renderTickets() {
             ticketListEl.innerHTML = '';
             if (state.tickets.length === 0) {
-                ticketListEl.innerHTML = '<p>No new tickets. Click the button above to generate one!</p>';
+                ticketListEl.innerHTML = '<p>No new tickets. Generate one manually or wait for the automatic generator!</p>';
             }
             state.tickets.forEach(ticket => {
                 const selectedClass = ticket.id === state.selectedTicket ? 'selected' : '';
+                // Calculate reward based on new logic for display
+                const expectedPay = ticket.complexity * TICKET_PAY_PER_STAR; 
                 ticketListEl.innerHTML += `
                     <div class="ticket ${selectedClass}" onclick="selectTicket(${ticket.id})">
                         <strong>Ticket #${ticket.id}</strong>
                         <p>Complexity: ${'★'.repeat(ticket.complexity)}${'☆'.repeat(5 - ticket.complexity)}</p>
+                        <p>Reward: $${expectedPay}</p>
                     </div>
                 `;
             });
@@ -433,7 +470,8 @@
         function renderEngineers() {
             engineerListEl.innerHTML = '';
             state.engineers.forEach(eng => {
-                const selectedClass = eng.id === state.selectedEngineer ? 'selected' : '';
+                // Use the same 'selected' class for a matching highlight
+                const selectedClass = eng.id === state.selectedEngineer ? 'selected' : ''; 
                 const fullName = `${eng.name} (${getEngineerTitle(eng.skill)})`;
                 const salaryCost = HOURLY_SALARIES[eng.skill] || '??';
 
@@ -484,12 +522,18 @@
         window.selectTicket = selectTicket;
         window.selectEngineer = selectEngineer;
         window.assignSelectedWork = assignSelectedWork; 
+        window.updateTicketGenerationSpeed = updateTicketGenerationSpeed; // Expose new control function
         
         // Start the game
         state.company.money = 500; 
         generateTicket(); 
         render();
-        const gameInterval = setInterval(gameLoop, 1000); // Run game loop every second
+        
+        // Start Game Loop (2 seconds)
+        gameInterval = setInterval(gameLoop, 2000); 
+        
+        // Start automatic ticket generation with default (Medium: 15 seconds)
+        updateTicketGenerationSpeed(document.getElementById('ticket-speed-selector').value);
     </script>
 </body>
 </html>
