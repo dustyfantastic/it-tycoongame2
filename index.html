@@ -503,11 +503,16 @@
             let statusText;
             
             if (eng.status === 'working') {
-                // Find the assigned ticket to get its complexity
+                // Find the assigned ticket to get its details
                 const assignedTicket = state.inProgressTickets.find(t => t.id === eng.assignedTicket);
                 if (assignedTicket) {
                     const complexityStars = '★'.repeat(assignedTicket.complexity) + '☆'.repeat(5 - assignedTicket.complexity);
-                    statusText = `Working on #${eng.assignedTicket} (${complexityStars}) 🟡`;
+                    
+                    // Calculate percentage completed
+                    const progressPercent = Math.min(100, Math.floor((assignedTicket.progress / PROGRESS_TO_COMPLETE) * 100));
+
+                    // Updated status text to include percentage completed
+                    statusText = `Working on #${eng.assignedTicket} (${complexityStars}) - ${progressPercent}% 🟡`;
                 } else {
                     statusText = `Working on Ticket #${eng.assignedTicket} 🟡`;
                 }
