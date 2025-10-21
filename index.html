@@ -235,18 +235,20 @@
     const PROGRESS_TO_COMPLETE = 100;
     const PROMOTION_THRESHOLD = 5; 
     const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; 
-    const HOURLY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 };
+    // Salary is now defined as a Daily rate
+    const DAILY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 }; 
     const JUNIOR_ENGINEER_NAMES = ["Charlie", "Dana", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"];
     
     // --- GIF ASSETS ---
     const GIFS = {
-        WORKING: 'https://gifdb.com/images/file/working-emoji-typing-gf7f51a0cl5ynyx9.gif', // Image of person typing/working
+        WORKING: 'https://media.giphy.com/media/l2JdVN53N0q12w4gg/giphy.gif', // Image of person typing/working
         IDLE: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmtpZ2VkcGg4cGRjM2J2aDVzYmR5cjQ1c2Fvb2o0bXRwd3d6ZzQyMCZlcD12MV9pbnRlcm5hbF9naWYmY3Q9cw/9RNGg4IQn0Qy4/giphy.gif' // Image of finger tapping/waiting
     };
     
     // Interval variables
-    let gameInterval;
-    let ticketInterval;
+    let gameInterval; // Ticket Progress (2 seconds)
+    let ticketInterval; // Ticket Generation (User-defined)
+    let salaryInterval; // Salary Deduction (NEW: 10 seconds)
     
     // Rename elements for simplicity
     const ticketListEl = document.getElementById('ticket-list');
@@ -283,13 +285,11 @@
         const ticketSelected = state.selectedTicket !== null;
         const engineerSelected = state.selectedEngineer !== null;
 
-        // The button is no longer strictly needed for assignment, but we'll use it for status
         if (ticketSelected && engineerSelected) {
             const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
             if (engineer && engineer.status === 'idle') {
                 assignBtn.disabled = false;
                 assignBtn.textContent = `Assignment Ready: Click to Assign! 🛠️`;
-                // NOTE: We don't actually rely on this button click anymore.
             } else {
                 assignBtn.disabled = true;
                 assignBtn.textContent = 'Engineer is busy or already selected.';
@@ -318,10 +318,8 @@
      * this triggers the instant assignment.
      */
     function selectTicket(ticketId) {
-        // Toggle ticket selection
         state.selectedTicket = ticketId === state.selectedTicket ? null : ticketId; 
         
-        // Check for instant assignment
         if (state.selectedTicket && state.selectedEngineer) {
             assignSelectedWork();
         }
@@ -337,10 +335,8 @@
         const engineer = state.engineers.find(e => e.id === engineerId);
         
         if (engineer.status === 'idle') {
-            // Toggle engineer selection
             state.selectedEngineer = engineerId === state.selectedEngineer ? null : engineerId; 
 
-            // Check for instant assignment
             if (state.selectedTicket && state.selectedEngineer) {
                 assignSelectedWork();
             }
@@ -353,11 +349,8 @@
     }
 
     /** * Triggered by the combined selection of a ticket and an engineer.
-     * Note: The HTML button function assignSelectedWork() is left intact for now, 
-     * but the logic is now primarily triggered by selection handlers.
      */
     function assignSelectedWork() {
-        // Only proceed if BOTH are selected and the engineer is idle
         if (!state.selectedTicket || !state.selectedEngineer) return;
 
         const ticketIndex = state.tickets.findIndex(t => t.id === state.selectedTicket);
@@ -423,15 +416,27 @@
         renderStats();
     }
     
-    /** The main game loop, runs every two seconds (representing a day/cycle) */
-    function gameLoop() {
+    /** NEW: Deducts all engineer salaries */
+    function deductSalaries() {
         let dailySalaryCost = 0;
+        state.engineers.forEach(engineer => {
+            const salary = DAILY_SALARIES[engineer.skill] || 5;
+            dailySalaryCost += salary;
+        });
 
+        state.company.money -= dailySalaryCost;
+        renderStats();
+    }
+    
+    /** The main game loop, runs every two seconds (focuses only on ticket progress) */
+    function gameLoop() {
+        
         // 1. Process Ticket Progress
         state.inProgressTickets.forEach(ticket => {
             const engineer = state.engineers.find(e => e.id === ticket.engineerId);
             if (!engineer) return; 
 
+            // Calculate progress based on engineer skill and ticket complexity
             const progressThisTick = (engineer.skill * 5) / ticket.complexity;
             ticket.progress += progressThisTick;
 
@@ -440,20 +445,12 @@
             }
         });
 
-        // 2. Deduct Daily Salaries (Operating Costs)
-        state.engineers.forEach(engineer => {
-            const salary = HOURLY_SALARIES[engineer.skill] || 5;
-            dailySalaryCost += salary;
-        });
-
-        state.company.money -= dailySalaryCost;
-        
-        // 3. Clean up and Render
+        // 2. Clean up and Render
         state.inProgressTickets = state.inProgressTickets.filter(t => t.progress < PROGRESS_TO_COMPLETE);
 
         renderProgress();
         renderEngineers(); 
-        renderStats();
+        renderStats(); // Update stats in case money changed from completed tickets
     }
     
     /** Resets and starts the ticket generation interval based on user selection */
@@ -501,9 +498,9 @@
         state.engineers.forEach(eng => {
             const selectedClass = eng.id === state.selectedEngineer ? 'selected' : ''; 
             const fullName = `${eng.name} (${getEngineerTitle(eng.skill)})`;
-            const salaryCost = HOURLY_SALARIES[eng.skill] || '??';
+            // Reference the new DAILY_SALARIES constant
+            const salaryCost = DAILY_SALARIES[eng.skill] || '??'; 
             
-            // Determine which GIF to show based on status
             const gifUrl = eng.status === 'working' ? GIFS.WORKING : GIFS.IDLE;
 
             engineerListEl.innerHTML += `
@@ -561,9 +558,12 @@
     generateTicket(); 
     render();
     
-    // Start Game Loop (2 seconds)
+    // Start Game Loop (Ticket Progress updates every 2 seconds)
     gameInterval = setInterval(gameLoop, 2000); 
     
+    // Start Salary Deduction Loop (Salaries deducted every 10 seconds, simulating a day/cycle)
+    salaryInterval = setInterval(deductSalaries, 10000); // 10 seconds
+
     // Start automatic ticket generation with default (Medium: 15 seconds)
     updateTicketGenerationSpeed(document.getElementById('ticket-speed-selector').value);
 </script>
