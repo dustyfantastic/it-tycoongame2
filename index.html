@@ -1,251 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Tycoon</title>
-    <style>
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        display: grid;
-        grid-template-areas:
-            "header header"
-            "tickets engineers"
-            "actions actions"
-            "progress progress";
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        padding: 20px;
-        background-color: #e8f5e9; /* Changed to Light Green */
-        color: #333;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rob's Silly IT Game - Simulator (Fatigue Update V4)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .engineer, .ticket {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative; 
+        }
+        .ticket {
+            background-color: #e3f2fd; /* Light blue */
+        }
+        .engineer.idle {
+            background-color: #e8f5e9; /* Light green */
+        }
+        .engineer.working {
+            background-color: #fff3e0; /* Light orange */
+        }
+        .engineer.burnedOut {
+            background-color: #fecaca; /* Light Red/Pink */
+            border-color: #dc2626; /* Strong Red Border */
+            cursor: not-allowed;
+            opacity: 0.7;
+            pointer-events: none; /* Prevent assignment while burned out */
+        }
+        .engineer.selected, .ticket.selected {
+            border-color: #4f46e5; /* Indigo highlight */
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
+            transform: scale(1.02);
+        }
+        /* Stalled/Flashing CSS */
+        @keyframes pulse-stalled {
+            0%, 100% { background-color: #fce4ec; border-color: #f43f5e; } /* Light Pink/Red Border */
+            50% { background-color: #fff; border-color: #f43f5e; }
+        }
+        /* Applied to in-progress tickets that have no assigned engineers */
+        .ticket.stalled {
+            animation: pulse-stalled 1.5s infinite;
+        }
+
+        /* Fatigue Meter CSS - Fixed 40px height */
+        .fatigue-meter {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 10px;
+            height: 40px; /* Fixed height for small meter */
+            background-color: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #9ca3af;
+        }
+        .fatigue-fill {
+            width: 100%;
+            transition: height 0.5s;
+            position: absolute;
+            bottom: 0;
+        }
+
+        /* Modal CSS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+            min-width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
         
-        /* --- CENTERING THE BOXES --- */
-        max-width: 1000px; /* Set a maximum width for the whole content area */
-        margin: 0 auto; /* Center the content area horizontally */
-        /* --------------------------- */
-    }
-    header {
-        grid-area: header;
-        text-align: center;
-        border-bottom: 2px solid #ddd;
-        padding-bottom: 10px;
-    }
-    h1, h2 {
-        margin: 0;
-    }
-    #stats {
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #27ae60;
-    }
-    .container {
-        background-color: #ffffff;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-    
-    #tickets { 
-        grid-area: tickets;
-        background-color: #fffac8; 
-        border: 1px solid #f1c40f; 
-    }
-    
-    #engineers { grid-area: engineers; }
-    #in-progress { grid-area: progress; }
-    #actions { grid-area: actions; text-align: center; }
-
-    .ticket, .engineer {
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 10px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background-color: #ffffff; 
-    }
-    .ticket:hover, .engineer.idle:hover {
-        border-color: #3498db;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .engineer.idle {
-        background-color: #e8f5e9; 
-    }
-    .engineer.working {
-        background-color: #fff8e1; 
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-    
-    /* Selection highlight */
-    .ticket.selected, .engineer.selected {
-        background-color: #f7cac9; /* Light Red/Pink for unified Selection */
-        border: 2px solid #e74c3c;
-    }
-    
-    .progress-bar {
-        width: 100%;
-        background-color: #eee;
-        border-radius: 5px;
-        height: 20px;
-        margin-top: 5px;
-        overflow: hidden;
-    }
-    .progress-fill {
-        height: 100%;
-        background-color: #2ecc71;
-        width: 0%;
-        transition: none; 
-    }
-    
-    /* Button Styling */
-    button {
-        width: 100%; 
-        padding: 12px 10px; 
-        background-color: #2ecc71; 
-        color: white;
-        border: 2px solid #2ecc71; 
-        border-radius: 4px; 
-        font-size: 1em;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 10px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: background-color 0.2s, border-color 0.2s;
-    }
-    button:hover:not(:disabled) {
-        background-color: #27ad60; 
-        border-color: #27ad60;
-    }
-    button:disabled {
-        background-color: #cccccc;
-        border-color: #cccccc;
-        cursor: not-allowed;
-    }
-    .hire-button-1 { background-color: #2ecc71; border-color: #2ecc71;} 
-    .hire-button-2 { background-color: #f1c40f; border-color: #f1c40f; } 
-    .hire-button-3 { background-color: #e67e22; border-color: #e67e22; } 
-    .hire-button-1:hover:not(:disabled) { background-color: #27ad60; border-color: #27ad60; }
-    .hire-button-2:hover:not(:disabled) { background-color: #f39c12; border-color: #f39c12; }
-    .hire-button-3:hover:not(:disabled) { background-color: #d35400; border-color: #d35400; }
-
-    #assign-button {
-        background-color: #e74c3c; 
-        border-color: #e74c3c;
-        font-size: 1.3em;
-        width: 60%;
-        margin: 10px auto; 
-        display: block;
-    }
-    #assign-button:hover:not(:disabled) {
-        background-color: #c0392b;
-        border-color: #c0392b;
-    }
-    #new-ticket-btn {
-        background-color: #3498db;
-        border-color: #3498db;
-        margin-bottom: 10px;
-    }
-    #new-ticket-btn:hover:not(:disabled) {
-        background-color: #2980b9;
-        border-color: #2980b9;
-    }
-    /* Style for the new control */
-    #ticket-speed-control {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        margin-bottom: 10px;
-        padding: 5px 0;
-        border-bottom: 1px solid #ddd;
-    }
-    #ticket-speed-control label {
-        font-weight: bold;
-        font-size: 0.9em;
-    }
-    #ticket-speed-selector {
-        padding: 8px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        background-color: #ffffff;
-    }
-</style>
+        .progress-bar {
+            height: 10px;
+            background-color: #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #2563eb;
+            transition: width 0.5s ease-out;
+        }
+        .mini-progress-bar {
+            display: inline-block;
+            width: 40px;
+            height: 8px;
+            background-color: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        .mini-progress-fill {
+            height: 100%;
+            background-color: #10b981; /* Green for 'complete' */
+            transition: width 0.5s ease-out;
+        }
+        .action-button {
+            padding: 10px 15px;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 6px;
+            transition: background-color 0.15s;
+            font-weight: 600;
+        }
+        .action-button:hover:not(:disabled) {
+            background-color: #4338ca;
+        }
+        .action-button:disabled {
+            background-color: #a5b4fc;
+            cursor: not-allowed;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-    <header>
-        <h1>My IT Company 📈</h1>
-        <div id="stats">Money: $500 | Total Tickets Fixed: 0</div>
-    </header>
+    <!-- Level Selection Screen -->
+    <div id="level-selection" class="section text-center max-w-lg mx-auto p-10 mt-10">
+        <h1 class="text-3xl font-bold mb-4">Start New Game</h1>
+        <p class="mb-6 text-gray-600">Select your starting difficulty level. This determines the skill of your two initial engineers and their resistance to **fatigue**.</p>
+        
+        <div class="space-y-4">
+            <button onclick="startGame(5)" class="w-full py-3 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition">
+                Level 1: Easy (2x Skill 5 Engineers - Low Fatigue)
+            </button>
+            <button onclick="startGame(3)" class="w-full py-3 bg-yellow-600 text-white text-lg font-semibold rounded-lg hover:bg-yellow-700 transition">
+                Level 2: Medium (2x Skill 3 Engineers - Moderate Fatigue)
+            </button>
+            <button onclick="startGame(1)" class="w-full py-3 bg-red-600 text-white text-lg font-semibold rounded-lg hover:bg-red-700 transition">
+                Level 3: Hard (2x Skill 1 Engineers - High Fatigue)
+            </button>
+        </div>
+    </div>
 
-    <div id="tickets" class="container">
-        <h2>Available Tickets</h2>
-                <div id="ticket-speed-control">
-            <label for="ticket-speed-selector">Auto-Generate Speed:</label>
-            <select id="ticket-speed-selector" onchange="updateTicketGenerationSpeed(this.value)">
-                <option value="20000">Slow (1 per 20s)</option>
-                <option value="15000" selected>Medium (1 per 15s)</option>
-                <option value="10000">Fast (1 per 10s)</option>
-                <option value="5000">Crazy (1 per 5s)</option>
-            </select>
-        </div>
-        <button id="new-ticket-btn">Generate New Ticket Instantly</button>
-        <div id="ticket-list"></div>
-    </div>
+    <!-- Main Game Container -->
+    <div id="game-container" class="container hidden">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-indigo-700">Rob's Silly IT Game</h1>
+            <p id="stats" class="text-2xl font-semibold mt-2 text-gray-800">Money: $500 | Total Tickets Fixed: 0</p>
+        </header>
 
-    <div id="engineers" class="container">
-        <h2>Engineers</h2>
-        <div id="engineer-list"></div>
-        <button class="hire-button-1" onclick="attemptHire(1)">Hire Junior (Skill 1) - $50</button>
-        <button class="hire-button-2" onclick="attemptHire(2)">Hire Junior II (Skill 2) - $100</button>
-        <button class="hire-button-3" onclick="attemptHire(3)">Hire Mid-Level (Skill 3) - $150</button>
-    </div>
+        <div id="actions" class="mb-8 p-4 bg-white rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4">
+            <div class="flex items-center space-x-2">
+                <button onclick="generateTicket()" class="action-button bg-pink-500 hover:bg-pink-600">Generate New Ticket 🎟️</button>
+                <button onclick="takeCoffeeBreak()" class="action-button bg-amber-500 hover:bg-amber-600">Time for Coffee Break ☕</button>
+                <select id="ticket-speed-selector" onchange="updateTicketGenerationSpeed(this.value)" class="p-2 border border-gray-300 rounded-md">
+                    <option value="9999999" selected>Manual Only</option>
+                    <option value="30000">Slow (30s)</option>
+                    <option value="15000">Medium (15s)</option>
+                    <option value="7000">Fast (7s)</option>
+                </select>
+            </div>
+             <!-- This button remains only for visual feedback, though assignment is instant via selection -->
+            <button id="assign-button" disabled class="w-full md:w-auto py-2 px-4 rounded-lg bg-indigo-200 text-indigo-800 font-bold transition">
+                Select Ticket & Idle Engineer to Assign 👷
+            </button>
+        </div>
 
-    <div id="actions">
-        <button id="assign-button" onclick="assignSelectedWork()" disabled>Select Ticket & Engineer to Assign 👷</button>
-    </div>
+        <!-- Hire Section -->
+        <div class="section mb-8">
+            <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Recruitment (One-Time Cost)</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                <button onclick="attemptHire(1)" class="action-button" title="Skill 1 Engineer">Hire Junior I ($50)</button>
+                <button onclick="attemptHire(2)" class="action-button" title="Skill 2 Engineer">Hire Junior II ($100)</button>
+                <button onclick="attemptHire(3)" class="action-button" title="Skill 3 Engineer">Hire Mid-Level ($150)</button>
+                <button onclick="attemptHire(4)" class="action-button" title="Skill 4 Engineer">Hire Senior ($200)</button>
+                <button onclick="attemptHire(5)" class="action-button" title="Skill 5 Engineer">Hire Principal ($250)</button>
+            </div>
+        </div>
 
-    <div id="in-progress" class="container">
-        <h2>Tickets In Progress</h2>
-        <div id="progress-list"></div>
-    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Column 1: Available Tickets -->
+            <div class="section">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Available Tickets (Click to Select)</h2>
+                <div id="ticket-list">
+                    <!-- Tickets rendered here -->
+                </div>
+            </div>
+
+            <!-- Column 2: Engineers -->
+            <div class="section">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Engineers (Click to Select & Assign)</h2>
+                <div id="engineer-list">
+                    <!-- Engineers rendered here -->
+                    <p class="text-sm mt-4 text-gray-500">
+                        <span class="font-bold">TIP:</span> Click a working engineer to **unassign** them. **Double-click** for details!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Column 3: In Progress / Global Progress -->
+            <div class="section">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">In Progress Tickets (Stop/Resume Available)</h2>
+                <div id="progress-list">
+                    <!-- In-progress tickets rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engineer Details Modal -->
+    <div id="engineer-details-modal" class="modal-overlay hidden">
+        <div class="modal-content" id="modal-content-area">
+            <!-- Content loaded by showEngineerDetails -->
+        </div>
+    </div>
 
 <script>
+    // Setup Firebase global variables (required for environment, though not used for persistence in this simple demo)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+
     // --- GAME STATE ---
     let state = {
         company: {
             money: 500, 
             totalTicketsFixed: 0,
         },
-        engineers: [
-            { id: 1, name: "Alice", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
-            { id: 2, name: "Bob", skill: 1, status: 'idle', ticketsFixed: 0, assignedTicket: null },
-        ],
+        engineers: [], // Initialized by startGame()
         inProgressTickets: [], 
         tickets: [],
         nextTicketId: 1,
-        nextEngineerId: 3,
-        selectedTicket: null,
-        selectedEngineer: null
+        nextEngineerId: 1,
+        selectedTicket: null, // Stores ticket ID
+        selectedEngineer: null, // Stores engineer ID
+        coffeeBreakActive: false, // Tracks global pause/resume state
     };
 
     // --- CONSTANTS ---
-    const TICKET_PAY_PER_STAR = 20; 
     const PROGRESS_TO_COMPLETE = 100;
     const PROMOTION_THRESHOLD = 5; 
-    const HIRE_COSTS = { 1: 50, 2: 100, 3: 150 }; 
+    const HIRE_COSTS = { 1: 50, 2: 100, 3: 150, 4: 200, 5: 250 }; 
     const DAILY_SALARIES = { 1: 10, 2: 15, 3: 20, 4: 25, 5: 30 }; 
-    const JUNIOR_ENGINEER_NAMES = ["Charlie", "Dana", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"];
+    const JUNIOR_ENGINEER_NAMES = ["Alice", "Bob", "Charlie", "Dana", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"];
+    const SOLO_THRESHOLD_PERCENT = 0.90; // 90% contribution to be considered 'Solo'
     
-    // --- GIF ASSETS ---
+    // --- FATIGUE CONSTANTS ---
+    const FATIGUE_MAX = 100;
+    const FATIGUE_RATE_IDLE = 5; // How much fatigue drops per 4-second tick while idle
+    // BURNOUT RECOVERY: 2 ticks * 4 seconds/tick = 8 seconds
+    const BURNOUT_DURATION_TICKS = 2; 
+    
+    /** Fatigue rate calculation: Lower skill means higher rate of fatigue gain. 
+     * Skill 1: 10 (8 base + 2 skill penalty)
+     * Skill 5: 8 (8 base + 0 skill penalty)
+     */
+    function getFatigueRateWorking(skill) {
+        return 8 + (6 - skill) * 0.5; 
+    }
+    
+    // --- GIF ASSETS (Updated WORKING GIF) ---
     const GIFS = {
-        WORKING: 'https://media.giphy.com/media/l2JdVN53N0q12w4gg/giphy.gif', // Image of person typing/working
-        IDLE: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmtpZ2VkcGg4cGRjM2J2aDVzYmR5cjQ1c2Fvb2o0bXRwd3d6ZzQyMCZlcD12MV9pbnRlcm5hbF9naWYmY3Q9cw/9RNGg4IQn0Qy4/giphy.gif' // Image of finger tapping/waiting
+        // New, simpler typing/working GIF
+        WORKING: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjR5cjZ0N3J0ZzZicnJ6azRzbG55NXR5NmZkdG1rZzZmbnUyNmc4ZndwZSZlcH12MV9pbnRlcm5hbF9naWYmY3Q9cw/1gPkkL2d8tK3S/giphy.gif', 
+        IDLE: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmtpZ2VkcGg4cGRjM2J2aDVzYmR5cjQ1c2Fvb2o0bXRwd3d6ZzQyMCZlcH12MV9pbnRlcm5hbF9naWYmY3Q9cw/9RNGg4IQn0Qy4/giphy.gif' 
     };
     
     // Interval variables
-    let gameInterval; // Ticket Progress (2 seconds)
+    let gameInterval; // Ticket Progress (Now 4 seconds)
     let ticketInterval; // Ticket Generation (User-defined)
     let salaryInterval; // Salary Deduction (10 seconds)
     
@@ -254,7 +305,6 @@
     const engineerListEl = document.getElementById('engineer-list');
     const progressListEl = document.getElementById('progress-list');
     const statsEl = document.getElementById('stats');
-    const newTicketBtn = document.getElementById('new-ticket-btn');
     const assignBtn = document.getElementById('assign-button'); 
 
     // --- HELPER FUNCTIONS ---
@@ -269,9 +319,14 @@
             default: return 'Trainee';
         }
     }
+    
+    /** Calculates the variable reward based on ticket complexity: C1=50, C2=75, C3=100, C4=125, C5=150 */
+    function calculateTicketReward(complexity) {
+        return 50 + (complexity - 1) * 25;
+    }
 
-    function getRandomName() {
-        const usedNames = state.engineers.map(e => e.name);
+
+    function getRandomName(usedNames) {
         const availableNames = JUNIOR_ENGINEER_NAMES.filter(name => !usedNames.includes(name));
         
         return availableNames.length > 0
@@ -279,6 +334,19 @@
             : `Engineer ${state.nextEngineerId}`;
     }
     
+    /** Finds a ticket, checking both available and in-progress lists */
+    function findTicketById(ticketId) {
+        // Check in available tickets
+        let ticket = state.tickets.find(t => t.id === ticketId);
+        if (ticket) return { ticket, isAvailable: true, index: state.tickets.findIndex(t => t.id === ticketId) };
+        
+        // Check in inProgress tickets
+        ticket = state.inProgressTickets.find(t => t.id === ticketId);
+        if (ticket) return { ticket, isAvailable: false, index: state.inProgressTickets.findIndex(t => t.id === ticketId) };
+        
+        return null;
+    }
+
     /** Updates the visibility and text of the Assign button */
     function updateAssignmentButton() {
         const ticketSelected = state.selectedTicket !== null;
@@ -286,17 +354,86 @@
 
         if (ticketSelected && engineerSelected) {
             const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
-            if (engineer && engineer.status === 'idle') {
+            const ticketInfo = findTicketById(state.selectedTicket);
+            
+            if (engineer && engineer.status === 'idle' && ticketInfo) {
+                // Determine if this is a NEW assignment or ADDING HELP
+                const action = ticketInfo.isAvailable ? 'New Assignment' : 'Add Help';
+                
                 assignBtn.disabled = false;
-                assignBtn.textContent = `Assignment Ready: Click to Assign! 🛠️`;
+                assignBtn.textContent = `${action} Ready: Assign ${engineer.name} to #${state.selectedTicket}! 🛠️`;
             } else {
                 assignBtn.disabled = true;
-                assignBtn.textContent = 'Engineer is busy or already selected.';
+                assignBtn.textContent = 'Engineer is busy, unavailable, or already selected.';
             }
         } else {
             assignBtn.disabled = true;
-            assignBtn.textContent = 'Select Ticket & Engineer to Assign 👷';
+            assignBtn.textContent = 'Select Ticket & Idle Engineer to Assign 👷';
         }
+    }
+
+    // --- MODAL FUNCTIONS ---
+    function closeModal() {
+        document.getElementById('engineer-details-modal').classList.add('hidden');
+    }
+
+    function showEngineerDetails(engineerId) {
+        // Stop the single-click from triggering immediately after double-click
+        window.clearTimeout(window.clickTimer); 
+
+        const engineer = state.engineers.find(e => e.id === engineerId);
+        if (!engineer) return;
+        
+        const soloCount = engineer.ticketsFixedSolo;
+        const collabCount = engineer.ticketsFixedCollab;
+        const totalFixed = engineer.ticketsFixed;
+        
+        // NEW: Calculate overall contribution rate
+        const averageContributionPerFix = totalFixed > 0 ? (engineer.totalProgressContributed / totalFixed).toFixed(1) : 0;
+        
+        const fixedTicketsList = engineer.completedTicketIds.length > 0
+            ? engineer.completedTicketIds.map(id => `#${id}`).join(', ')
+            : 'None yet.';
+            
+        // --- UPDATED CONTRIBUTION HTML ---
+        const contributionHtml = `
+            <h4 class="text-xl font-semibold mt-6 mb-2 text-indigo-600">Ticket Contribution Breakdown:</h4>
+            <div class="space-y-1 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                <p><strong>Solo Tickets:</strong> &ge;${SOLO_THRESHOLD_PERCENT * 100}% contribution (${soloCount})</p>
+                <p><strong>Collaborative Tickets:</strong> &lt;${SOLO_THRESHOLD_PERCENT * 100}% contribution (${collabCount})</p>
+            </div>
+            <h4 class="text-xl font-semibold mt-6 mb-2 text-indigo-600">Career Metrics:</h4>
+            <div class="space-y-1 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                <p><strong>Total Progress Generated:</strong> ${engineer.totalProgressContributed.toFixed(0)} points</p>
+                <p><strong>Average Progress per Fixed Ticket:</strong> ${averageContributionPerFix} points</p>
+            </div>
+        `;
+        // --- END UPDATED CONTRIBUTION HTML ---
+
+        const content = `
+            <h3 class="text-2xl font-bold mb-4 text-indigo-700">${engineer.name}'s Profile
+            <p><strong>Current Fatigue:</strong> ${engineer.fatigueLevel.toFixed(1)}%</p>
+            </h3>
+            <div class="space-y-2 text-gray-700">
+                <p><strong>Title:</strong> ${getEngineerTitle(engineer.skill)}</p>
+                <p><strong>Skill Level:</strong> ${'✦'.repeat(engineer.skill)}${'✧'.repeat(5 - engineer.skill)} (Salary: $${DAILY_SALARIES[engineer.skill]}/Day)</p>
+                <p><strong>Total Tickets Fixed:</strong> ${engineer.ticketsFixed}</p>
+            </div>
+            
+            ${contributionHtml}
+
+            <h4 class="text-xl font-semibold mt-6 mb-2 text-indigo-600">Completed Ticket History IDs:</h4>
+            <div class="p-3 bg-gray-100 rounded-lg text-sm break-words max-h-32 overflow-y-auto border border-gray-300">
+                ${fixedTicketsList}
+            </div>
+
+            <button onclick="closeModal()" class="mt-6 w-full py-2 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition">
+                Close
+            </button>
+        `;
+
+        document.getElementById('modal-content-area').innerHTML = content;
+        document.getElementById('engineer-details-modal').classList.remove('hidden');
     }
 
     // --- GAME LOGIC ---
@@ -308,15 +445,170 @@
             id: state.nextTicketId++,
             complexity: complexity,
             progress: 0,
+            assignedEngineers: [], 
+            previousEngineers: [], 
+            contributions: {}, 
         };
         state.tickets.push(newTicket);
         renderTickets();
     }
-
-    /** * Handles selecting a ticket. If an engineer is already selected,
-     * this triggers the instant assignment.
+    
+    /** * Pauses all working engineers and clears their ticket assignments, or resumes them.
      */
+    function takeCoffeeBreak() {
+        const coffeeBtn = document.querySelector('[onclick="takeCoffeeBreak()"]');
+        
+        if (!state.coffeeBreakActive) {
+            // --- START COFFEE BREAK (PAUSE) ---
+            console.log("Coffee break initiated! Pausing all working engineers.");
+            state.coffeeBreakActive = true;
+            coffeeBtn.textContent = 'Resume Work ▶️';
+
+            state.engineers.forEach(engineer => {
+                if (engineer.status === 'working') {
+                    const ticketId = engineer.assignedTicket;
+                    const ticketInfo = findTicketById(ticketId);
+
+                    if (ticketInfo) {
+                        const targetTicket = ticketInfo.ticket;
+                        
+                        // 1. Store the ticket ID the engineer was working on
+                        engineer.pausedFromTicketId = ticketId; 
+                        
+                        // 2. Temporarily remove engineer from ticket's assignment list
+                        targetTicket.assignedEngineers = targetTicket.assignedEngineers.filter(id => id !== engineer.id);
+
+                        // 3. Add engineer back to the previousEngineers list if they were working
+                        if (!targetTicket.previousEngineers.includes(engineer.id)) {
+                             targetTicket.previousEngineers.push(engineer.id);
+                        }
+                    }
+
+                    // 4. Update engineer status
+                    engineer.status = 'idle';
+                    engineer.assignedTicket = null;
+                }
+            });
+
+        } else {
+            // --- END COFFEE BREAK (RESUME) ---
+            console.log("Resuming work after coffee break.");
+            state.coffeeBreakActive = false;
+            coffeeBtn.textContent = 'Time for Coffee Break ☕';
+
+            state.engineers.forEach(engineer => {
+                const ticketId = engineer.pausedFromTicketId;
+
+                if (ticketId && engineer.status === 'idle') { // Only resume if they are currently idle
+                    const ticketInfo = findTicketById(ticketId);
+                    
+                    // Check if the ticket still exists and is in the inProgress list
+                    if (ticketInfo && !ticketInfo.isAvailable) { 
+                        const targetTicket = ticketInfo.ticket;
+                        
+                        // 1. Resume engineer's status
+                        engineer.status = 'working';
+                        engineer.assignedTicket = ticketId;
+                        
+                        // 2. Add engineer back to ticket's assignment list (prevent duplicates)
+                        if (!targetTicket.assignedEngineers.includes(engineer.id)) {
+                             targetTicket.assignedEngineers.push(engineer.id);
+                        }
+                        
+                    } else if (ticketId !== null) {
+                        console.warn(`${engineer.name}'s previous ticket #${ticketId} was either completed or no longer in progress. Cannot resume.`);
+                    }
+
+                    // 3. Clear the paused ticket ID regardless of successful assignment
+                    engineer.pausedFromTicketId = null;
+                }
+            });
+        }
+        
+        // Clear manual selections and update the UI
+        state.selectedTicket = null; 
+        state.selectedEngineer = null;
+        render();
+    }
+    
+    /**
+     * Manually stops or resumes an in-progress ticket, affecting only its assigned engineers.
+     */
+    function toggleTicketStopResume(ticketId) {
+        if (state.coffeeBreakActive) {
+            console.log("Cannot manually stop/resume while Coffee Break is active.");
+            return;
+        }
+
+        const ticketInfo = findTicketById(ticketId);
+        if (!ticketInfo || ticketInfo.isAvailable) return;
+        const targetTicket = ticketInfo.ticket;
+
+        // Check if the ticket is currently working (assigned engineers > 0)
+        const isWorking = targetTicket.assignedEngineers.length > 0;
+
+        if (isWorking) {
+            // --- STOP PROJECT (PAUSE) ---
+            console.log(`Stopping ticket #${ticketId}. Engineers unassigned.`);
+
+            // 1. Save engineers from assignedEngineers to previousEngineers list
+            targetTicket.previousEngineers = [...targetTicket.assignedEngineers];
+
+            // 2. Unassign engineers and set them to idle
+            targetTicket.assignedEngineers.forEach(engId => {
+                const engineer = state.engineers.find(e => e.id === engId);
+                if (engineer && engineer.status !== 'burnedOut') { // Don't touch burned out engineers
+                    engineer.status = 'idle';
+                    engineer.assignedTicket = null;
+                }
+            });
+
+            // 3. Clear the ticket's current assignment list (makes it STALLED)
+            targetTicket.assignedEngineers = [];
+
+        } else if (targetTicket.previousEngineers.length > 0) {
+            // --- RESUME PROJECT (UN-STALL) ---
+            console.log(`Resuming work on ticket #${ticketId} and re-assigning previous engineers.`);
+
+            const engineersToReassign = targetTicket.previousEngineers;
+            
+            // 1. Re-assign the previous engineers who are currently idle
+            targetTicket.previousEngineers = []; // Clear the list before iterating
+            engineersToReassign.forEach(engId => {
+                const engineer = state.engineers.find(e => e.id === engId);
+                // Only reassign if idle and not burned out
+                if (engineer && engineer.status === 'idle' && engineer.assignedTicket === null) { 
+                    engineer.status = 'working';
+                    engineer.assignedTicket = ticketId;
+                    targetTicket.assignedEngineers.push(engId); // Add back to ticket's assigned list
+                } else if (engineer && engineer.status === 'burnedOut') {
+                    // If they are burned out, keep them in the previousEngineers list to resume later
+                    targetTicket.previousEngineers.push(engId);
+                }
+            });
+
+        } else {
+            console.log("Ticket is stalled with no previous engineers to resume.");
+        }
+
+        // 4. Clear selections and update UI
+        state.selectedTicket = null;
+        state.selectedEngineer = null;
+        render();
+    }
+
+
+    /** * Handles selecting a ticket. */
     function selectTicket(ticketId) {
+        if (state.coffeeBreakActive) {
+            console.log("Cannot manually assign/un-stall while Coffee Break is active.");
+            return;
+        }
+        
+        const ticketInfo = findTicketById(ticketId);
+        if (!ticketInfo) return;
+        
+        // Toggle selection
         state.selectedTicket = ticketId === state.selectedTicket ? null : ticketId; 
         
         if (state.selectedTicket && state.selectedEngineer) {
@@ -327,90 +619,203 @@
         updateAssignmentButton();
     }
 
-    /** * Handles selecting an engineer. If a ticket is already selected,
-     * this triggers the instant assignment.
-     */
+    /** * Handles selecting an engineer or unassigning a working engineer. */
     function selectEngineer(engineerId) {
-        const engineer = state.engineers.find(e => e.id === engineerId);
-        
-        if (engineer.status === 'idle') {
-            state.selectedEngineer = engineerId === state.selectedEngineer ? null : engineerId; 
+        // Use a timer to differentiate between single and double-click
+        if (window.clickTimer) {
+            window.clearTimeout(window.clickTimer);
+            window.clickTimer = null;
+            return; 
+        }
 
-            if (state.selectedTicket && state.selectedEngineer) {
-                assignSelectedWork();
+        window.clickTimer = window.setTimeout(() => {
+            window.clickTimer = null;
+            
+            if (state.coffeeBreakActive) {
+                console.log("Cannot select/assign/unassign while Coffee Break is active.");
+                render(); 
+                return;
+            }
+
+            const engineer = state.engineers.find(e => e.id === engineerId);
+            if (!engineer || engineer.status === 'burnedOut') return; // Cannot select burned out engineers
+            
+            if (engineer.status === 'idle') {
+                // Logic for selecting an idle engineer for assignment
+                state.selectedEngineer = engineerId === state.selectedEngineer ? null : engineerId; 
+
+                if (state.selectedTicket && state.selectedEngineer) {
+                    assignSelectedWork();
+                }
+
+            } else if (engineer.status === 'working') {
+                // Logic: Unassign the working engineer
+                const ticketId = engineer.assignedTicket;
+                const ticketInfo = findTicketById(ticketId);
+
+                if (ticketInfo) {
+                    const targetTicket = ticketInfo.ticket;
+                    
+                    // 1. Remove engineer from ticket's assignment list
+                    targetTicket.assignedEngineers = targetTicket.assignedEngineers.filter(id => id !== engineer.id);
+                    
+                    // 2. Add engineer to the previousEngineers list if it's now stalled
+                    if (targetTicket.assignedEngineers.length === 0) {
+                        // Ensure only the latest engineers are in the previous list
+                        targetTicket.previousEngineers = [engineer.id]; 
+                    }
+
+                    // 3. Update engineer status
+                    engineer.status = 'idle';
+                    engineer.assignedTicket = null;
+
+                    console.log(`${engineer.name} unassigned from ticket #${ticketId} and is now idle.`);
+                }
+                
+                // Clear selections after the action, regardless of success
+                state.selectedTicket = null;
+                state.selectedEngineer = null;
             }
 
             render();
             updateAssignmentButton();
-        } else {
-            alert("This engineer is already working!");
-        }
+        }, 200); 
     }
 
-    /** * Triggered by the combined selection of a ticket and an engineer.
+    /** * Triggered by the combined selection of a ticket and an idle engineer.
      */
     function assignSelectedWork() {
         if (!state.selectedTicket || !state.selectedEngineer) return;
 
-        const ticketIndex = state.tickets.findIndex(t => t.id === state.selectedTicket);
+        const ticketInfo = findTicketById(state.selectedTicket);
         const engineer = state.engineers.find(e => e.id === state.selectedEngineer);
-        const ticket = state.tickets[ticketIndex];
 
-        if (ticket && engineer && engineer.status === 'idle') {
-            // Assign
-            engineer.status = 'working';
-            engineer.assignedTicket = ticket.id;
-            ticket.engineerId = engineer.id; 
+        if (!ticketInfo || !engineer || engineer.status !== 'idle') return;
+
+        let targetTicket = ticketInfo.ticket;
+
+        if (ticketInfo.isAvailable) {
+            // Case 1: NEW assignment (moving from available to in-progress)
             
-            // Move ticket from 'available' to 'inProgress'
-            state.inProgressTickets.push(ticket);
-            state.tickets.splice(ticketIndex, 1);
+            // Remove from available list
+            state.tickets.splice(ticketInfo.index, 1);
             
-            // Clear selections
-            state.selectedTicket = null;
-            state.selectedEngineer = null;
-            
-            render();
+            // Initialize assigned engineers and move to in-progress
+            targetTicket.assignedEngineers = [engineer.id];
+            targetTicket.previousEngineers = [];
+            state.inProgressTickets.push(targetTicket);
+        } else {
+            // Case 2: ADDING HELP or RESUMING work on an existing in-progress ticket
+            if (targetTicket.assignedEngineers.includes(engineer.id)) {
+                console.warn(`${engineer.name} is already assigned to ticket #${targetTicket.id}.`);
+            } else {
+                targetTicket.assignedEngineers.push(engineer.id);
+                // When an engineer is manually assigned (added), clear the automatic resume history
+                targetTicket.previousEngineers = [];
+            }
         }
+        
+        // Update engineer status
+        engineer.status = 'working';
+        engineer.assignedTicket = targetTicket.id;
+        
+        // Clear selections
+        state.selectedTicket = null;
+        state.selectedEngineer = null;
+        
+        render();
     }
 
     /** Handles hiring a new engineer at a specific skill level */
     function attemptHire(skillLevel) {
         const cost = HIRE_COSTS[skillLevel];
         if (state.company.money < cost) {
-            alert(`You need $${cost} to hire a ${getEngineerTitle(skillLevel)}!`);
+            console.log(`Cannot hire: Need $${cost} to hire a ${getEngineerTitle(skillLevel)}!`);
             return;
         }
 
         state.company.money -= cost;
         
+        const usedNames = state.engineers.map(e => e.name);
+        
         const newEngineer = {
             id: state.nextEngineerId++,
-            name: getRandomName(),
+            name: getRandomName(usedNames),
             skill: skillLevel, 
             status: 'idle',
             ticketsFixed: 0,
-            assignedTicket: null
+            ticketsFixedSolo: 0, 
+            ticketsFixedCollab: 0, 
+            totalProgressContributed: 0, 
+            assignedTicket: null,
+            completedTicketIds: [],
+            pausedFromTicketId: null, // Global coffee break logic
+            
+            // --- FATIGUE PROPERTIES ---
+            fatigueLevel: 0,
+            maxFatigue: FATIGUE_MAX,
+            fatigueRateWorking: getFatigueRateWorking(skillLevel),
+            fatigueRateIdle: FATIGUE_RATE_IDLE,
+            burnoutDurationTicks: BURNOUT_DURATION_TICKS,
+            burnoutTimer: 0,
         };
         state.engineers.push(newEngineer);
         render();
     }
 
     /** Finalizes a ticket and calculates the variable payment */
-    function completeTicket(engineer, ticket) {
-        const payment = (ticket.complexity * TICKET_PAY_PER_STAR);
+    function completeTicket(ticket) {
+        const payment = calculateTicketReward(ticket.complexity); 
         state.company.money += payment;
         state.company.totalTicketsFixed++;
         
-        engineer.ticketsFixed++;
-        engineer.status = 'idle';
-        engineer.assignedTicket = null;
+        const totalProgressRequired = PROGRESS_TO_COMPLETE;
         
-        // Check for promotion
-        if (engineer.ticketsFixed % PROMOTION_THRESHOLD === 0 && engineer.skill < 5) {
-            engineer.skill++;
-            alert(`${engineer.name} has been promoted to ${getEngineerTitle(engineer.skill)}! 🎉`);
-        }
+        // Contribution Analysis
+        Object.entries(ticket.contributions).forEach(([engIdStr, contributedPoints]) => {
+            const engId = parseInt(engIdStr, 10);
+            const engineer = state.engineers.find(e => e.id === engId);
+
+            if (engineer) {
+                engineer.totalProgressContributed += contributedPoints; 
+                const contributionPercentage = contributedPoints / totalProgressRequired; 
+                
+                if (contributionPercentage >= SOLO_THRESHOLD_PERCENT) {
+                    engineer.ticketsFixedSolo++;
+                } else {
+                    engineer.ticketsFixedCollab++;
+                }
+
+                engineer.ticketsFixed++;
+                engineer.completedTicketIds.push(ticket.id); 
+                
+                // Clear assignment and set status only if they aren't burned out
+                if (engineer.status !== 'burnedOut') {
+                    engineer.status = 'idle';
+                    engineer.assignedTicket = null;
+                    engineer.pausedFromTicketId = null; 
+                }
+
+                // Check for promotion
+                if (engineer.ticketsFixed % PROMOTION_THRESHOLD === 0 && engineer.skill < 5) {
+                    engineer.skill++; // Promote
+                    // Update the engineer's fatigue rate based on new skill
+                    engineer.fatigueRateWorking = getFatigueRateWorking(engineer.skill);
+                    console.log(`${engineer.name} has been promoted to ${getEngineerTitle(engineer.skill)}! 🎉`);
+                }
+            }
+        });
+        
+        // Ensure engineers who were assigned but did not make it into the contributions list (0 work) are set to idle
+        [...ticket.assignedEngineers, ...ticket.previousEngineers].forEach(engId => {
+            if (!ticket.contributions[engId]) {
+                const engineer = state.engineers.find(e => e.id === engId);
+                if (engineer && engineer.status !== 'burnedOut') {
+                    engineer.status = 'idle';
+                    engineer.assignedTicket = null;
+                }
+            }
+        });
 
         renderStats();
     }
@@ -427,29 +832,92 @@
         renderStats();
     }
     
-    /** The main game loop, runs every two seconds (focuses only on ticket progress) */
+    /** The main game loop, runs every four seconds */
     function gameLoop() {
         
-        // 1. Process Ticket Progress
-        state.inProgressTickets.forEach(ticket => {
-            const engineer = state.engineers.find(e => e.id === ticket.engineerId);
-            if (!engineer) return; 
+        const completedTicketIds = [];
 
-            // Calculate progress based on engineer skill and ticket complexity
-            const progressThisTick = (engineer.skill * 5) / ticket.complexity;
-            ticket.progress += progressThisTick;
+        // 1. Process Engineer Fatigue and Status
+        state.engineers.forEach(engineer => {
+            if (engineer.status === 'working') {
+                // Increase fatigue based on their working rate
+                engineer.fatigueLevel += engineer.fatigueRateWorking;
 
-            if (ticket.progress >= PROGRESS_TO_COMPLETE) {
-                completeTicket(engineer, ticket);
+                if (engineer.fatigueLevel >= engineer.maxFatigue) {
+                    // BURN OUT!
+                    engineer.fatigueLevel = engineer.maxFatigue; 
+                    engineer.status = 'burnedOut';
+                    engineer.burnoutTimer = engineer.burnoutDurationTicks;
+                    
+                    // Unassign from ticket immediately
+                    if (engineer.assignedTicket) {
+                        const ticketInfo = findTicketById(engineer.assignedTicket);
+                        if (ticketInfo) {
+                            // 1. Remove from assigned list
+                            ticketInfo.ticket.assignedEngineers = ticketInfo.ticket.assignedEngineers.filter(id => id !== engineer.id);
+                            
+                            // 2. If the ticket is now stalled, add to previousEngineers list
+                            if (ticketInfo.ticket.assignedEngineers.length === 0) {
+                                ticketInfo.ticket.previousEngineers.push(engineer.id);
+                            }
+                        }
+                        engineer.assignedTicket = null;
+                    }
+                    console.log(`${engineer.name} has burned out due to fatigue! They are unusable for ~${engineer.burnoutDurationTicks * 4} seconds.`);
+                }
+            } else if (engineer.status === 'idle') {
+                // Decrease fatigue while idle
+                engineer.fatigueLevel = Math.max(0, engineer.fatigueLevel - engineer.fatigueRateIdle);
+            } else if (engineer.status === 'burnedOut') {
+                // Decrease burnout timer
+                engineer.burnoutTimer = Math.max(0, engineer.burnoutTimer - 1);
+                if (engineer.burnoutTimer === 0) {
+                    engineer.status = 'idle'; // Back to work!
+                    engineer.fatigueLevel = 0; // Reset fatigue on recovery
+                    console.log(`${engineer.name} has recovered from burnout!`);
+                }
             }
         });
 
-        // 2. Clean up and Render
-        state.inProgressTickets = state.inProgressTickets.filter(t => t.progress < PROGRESS_TO_COMPLETE);
 
-        renderProgress();
-        renderEngineers(); 
-        renderStats(); // Update stats in case money changed from completed tickets
+        // 2. Process Ticket Progress
+        state.inProgressTickets.forEach(ticket => {
+            
+            // Calculate total skill of all assigned engineers
+            let totalSkill = 0;
+            const activeEngineers = [];
+            ticket.assignedEngineers.forEach(engId => {
+                const engineer = state.engineers.find(e => e.id === engId);
+                if (engineer && engineer.status === 'working') {
+                    totalSkill += engineer.skill;
+                    activeEngineers.push(engineer); 
+                }
+            });
+            
+            if (totalSkill === 0) return; // Ticket is stalled/paused/engineers all burned out
+
+            const progressThisTick = (totalSkill * 5) / ticket.complexity;
+
+            // Distribute contribution points to the ticket's internal tracker
+            activeEngineers.forEach(engineer => {
+                const skillRatio = engineer.skill / totalSkill;
+                const individualContributionPoints = skillRatio * progressThisTick;
+
+                ticket.contributions[engineer.id] = (ticket.contributions[engineer.id] || 0) + individualContributionPoints;
+            });
+
+            ticket.progress += progressThisTick;
+
+            if (ticket.progress >= PROGRESS_TO_COMPLETE) {
+                completeTicket(ticket);
+                completedTicketIds.push(ticket.id);
+            }
+        });
+
+        // 3. Clean up (remove completed tickets) and Render
+        state.inProgressTickets = state.inProgressTickets.filter(t => !completedTicketIds.includes(t.id));
+
+        render(); 
     }
     
     /** Resets and starts the ticket generation interval based on user selection */
@@ -457,7 +925,10 @@
         if (ticketInterval) {
             clearInterval(ticketInterval);
         }
-        ticketInterval = setInterval(generateTicket, parseInt(intervalMs, 10));
+        const interval = parseInt(intervalMs, 10);
+        if (interval < 9999999) {
+            ticketInterval = setInterval(generateTicket, interval);
+        }
     }
 
 
@@ -480,7 +951,7 @@
         }
         state.tickets.forEach(ticket => {
             const selectedClass = ticket.id === state.selectedTicket ? 'selected' : '';
-            const expectedPay = ticket.complexity * TICKET_PAY_PER_STAR; 
+            const expectedPay = calculateTicketReward(ticket.complexity); 
             ticketListEl.innerHTML += `
                 <div class="ticket ${selectedClass}" onclick="selectTicket(${ticket.id})">
                     <strong>Ticket #${ticket.id}</strong>
@@ -491,7 +962,7 @@
         });
     }
 
-    /** Updates the engineer list */
+    /** Updates the engineer list, including the new fatigue meter */
     function renderEngineers() {
         engineerListEl.innerHTML = '';
         state.engineers.forEach(eng => {
@@ -499,33 +970,62 @@
             const fullName = `${eng.name} (${getEngineerTitle(eng.skill)})`;
             const salaryCost = DAILY_SALARIES[eng.skill] || '??'; 
             
-            const gifUrl = eng.status === 'working' ? GIFS.WORKING : GIFS.IDLE;
+            // --- Status Logic ---
             let statusText;
+            let engineerClass = eng.status; // 'idle', 'working', 'burnedOut'
+            let gifUrl = GIFS.IDLE;
             
             if (eng.status === 'working') {
-                // Find the assigned ticket to get its details
+                gifUrl = GIFS.WORKING; // Use the updated, smaller working GIF
                 const assignedTicket = state.inProgressTickets.find(t => t.id === eng.assignedTicket);
                 if (assignedTicket) {
                     const complexityStars = '★'.repeat(assignedTicket.complexity) + '☆'.repeat(5 - assignedTicket.complexity);
-                    
-                    // Calculate percentage completed
                     const progressPercent = Math.min(100, Math.floor((assignedTicket.progress / PROGRESS_TO_COMPLETE) * 100));
-
-                    // Updated status text to include percentage completed
-                    statusText = `Working on #${eng.assignedTicket} (${complexityStars}) - ${progressPercent}% 🟡`;
+                    const percentLeft = 100 - progressPercent; 
+                    const miniProgressBar = `
+                        <div class="mini-progress-bar">
+                            <div class="mini-progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>`;
+                    statusText = `Working on #${eng.assignedTicket} (${complexityStars}) - ${percentLeft}% left ${miniProgressBar} 🟡`;
                 } else {
-                    statusText = `Working on Ticket #${eng.assignedTicket} 🟡`;
+                    statusText = `Working on unlisted Ticket #${eng.assignedTicket} 🟡`;
                 }
-            } else {
+            } else if (eng.status === 'burnedOut') {
+                statusText = `BURNED OUT! Recovering in ${eng.burnoutTimer * 4}s 🔴`;
+                engineerClass = 'burnedOut';
+            } else { // idle
                 statusText = 'Idle 🟢';
+                if (eng.pausedFromTicketId) {
+                    statusText = `Paused (Coffee Break) from #${eng.pausedFromTicketId} ⏸️`;
+                }
             }
+            
+            // --- Fatigue Meter Logic ---
+            const fatiguePercent = Math.min(100, Math.floor(eng.fatigueLevel));
+            let meterColor = '#10b981'; // Green
+            if (fatiguePercent > 70) meterColor = '#f59e0b'; // Yellow
+            if (fatiguePercent >= 90) meterColor = '#dc2626'; // Red
 
+            const fatigueMeterHtml = `
+                <div class="fatigue-meter" title="Fatigue: ${fatiguePercent}%">
+                    <div class="fatigue-fill" style="height: ${fatiguePercent}%; background-color: ${meterColor};"></div>
+                </div>
+            `;
+            
+            const assignedCount = eng.assignedTicket ? 1 : 0; 
+            
             engineerListEl.innerHTML += `
-                <div class="engineer ${eng.status} ${selectedClass}" onclick="selectEngineer(${eng.id})">
-                    <img src="${gifUrl}" alt="${eng.status}" style="width: 50px; height: 50px; float: right; margin-left: 10px;">
+                <div 
+                    class="engineer ${engineerClass} ${selectedClass}" 
+                    onclick="selectEngineer(${eng.id})" 
+                    ondblclick="showEngineerDetails(${eng.id})"
+                >
+                    ${fatigueMeterHtml}
+                    <img src="${gifUrl}" alt="${eng.status}" style="width: 50px; height: 50px; float: right; margin-left: 10px; border-radius: 4px;">
                     <strong>${fullName}</strong>
                     <p>Skill: ${'✦'.repeat(eng.skill)}${'✧'.repeat(5 - eng.skill)} (Salary: $${salaryCost}/Day)</p>
                     <p>Status: ${statusText}</p>
+                    <p><strong>Assigned Tickets: ${assignedCount}</strong></p>
                     <p>Tickets Fixed: ${eng.ticketsFixed}</p>
                 </div>
             `;
@@ -540,18 +1040,60 @@
             return;
         }
         state.inProgressTickets.forEach(ticket => {
-            const engineer = state.engineers.find(e => e.id === ticket.engineerId);
             const progressPercent = Math.min(100, (ticket.progress / PROGRESS_TO_COMPLETE) * 100);
             const complexityStars = '★'.repeat(ticket.complexity) + '☆'.repeat(5 - ticket.complexity);
+            
+            // Determine if the ticket is stalled (no currently assigned engineers)
+            const isStalled = ticket.assignedEngineers.length === 0;
+            
+            // SIMPLIFIED BUTTON TEXT
+            const buttonText = isStalled ? 'Resume ▶️' : 'Stop 🛑';
+            const buttonColor = isStalled ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+
+            const stalledClass = isStalled ? 'stalled' : '';
+            const selectedClass = ticket.id === state.selectedTicket ? 'selected' : '';
+            
+            // SIMPLIFIED STATUS LABEL
+            let statusLabel = isStalled 
+                ? '<span class="text-red-600 font-bold">STOPPED</span>'
+                : 'In Progress';
+            
+            // Combined list of engineers (active + previous) to show who is associated with the project
+            const associatedEngineers = Array.from(new Set([...ticket.assignedEngineers, ...ticket.previousEngineers]));
+
+            const assignedEngineersDetails = associatedEngineers.map(engId => {
+                const engineer = state.engineers.find(e => e.id === engId);
+                if (!engineer) return '';
+                
+                const isActive = ticket.assignedEngineers.includes(engId);
+                
+                let nameStyle = isActive ? 'font-medium' : 'italic font-light text-gray-500';
+                if (engineer.status === 'burnedOut') nameStyle += ' text-red-400';
+
+                return `<span class="${nameStyle}">${engineer.name}</span>`;
+            }).filter(Boolean).join(', ');
+
+
+            // Updated Button: Smaller size (py-1 px-2, text-xs)
+            const toggleButtonHtml = 
+                `<button class="absolute top-3 right-3 py-1 px-2 ${buttonColor} text-white rounded-lg text-xs font-bold shadow-md transition" onclick="event.stopPropagation(); toggleTicketStopResume(${ticket.id})">
+                    ${buttonText}
+                </button>`;
 
             progressListEl.innerHTML += `
-                <div class="ticket" data-ticket-id="${ticket.id}">
-                    <strong>Ticket #${ticket.id} (Complexity: ${complexityStars})</strong>
-                    <p>Assigned to: ${engineer ? engineer.name + ' (' + getEngineerTitle(engineer.skill) + ')' : '???'}</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                <div class="ticket ${stalledClass} ${selectedClass}" data-ticket-id="${ticket.id}" onclick="selectTicket(${ticket.id})">
+                    ${toggleButtonHtml}
+                    <!-- Reduced padding-right (pr-20) for the smaller button -->
+                    <div class="pr-20"> 
+                        <strong>Ticket #${ticket.id} (${statusLabel})</strong>
+                        <!-- Complexity stars are here -->
+                        <p class="text-sm mt-1">Complexity: ${complexityStars}</p>
+                        <p class="text-sm mt-1 mb-2">Associated: ${assignedEngineersDetails || 'None'}</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <p class="text-xs mt-1">${Math.floor(progressPercent)}% complete</p>
                     </div>
-                    <p>${Math.floor(progressPercent)}% complete</p>
                 </div>
             `;
         });
@@ -562,29 +1104,91 @@
         statsEl.innerHTML = `Money: $${Math.floor(state.company.money)} | Total Tickets Fixed: ${state.company.totalTicketsFixed}`;
     }
 
-    // --- INITIALIZE ---
-    newTicketBtn.addEventListener('click', generateTicket);
+    // --- INITIALIZE & START GAME ---
+    
+    /** Initializes the game state based on the chosen difficulty level */
+    function startGame(skillLevel) {
+        // Clear existing intervals if restarting
+        if (gameInterval) clearInterval(gameInterval);
+        if (ticketInterval) clearInterval(ticketInterval);
+        if (salaryInterval) clearInterval(salaryInterval);
+
+        // Define a base engineer object with fatigue properties
+        const baseEngineer = (id, name, skill) => ({
+            id: id, 
+            name: name, 
+            skill: skill, 
+            status: 'idle', 
+            ticketsFixed: 0, 
+            ticketsFixedSolo: 0, 
+            ticketsFixedCollab: 0, 
+            totalProgressContributed: 0, 
+            assignedTicket: null, 
+            completedTicketIds: [], 
+            pausedFromTicketId: null,
+            // Fatigue properties
+            fatigueLevel: 0,
+            maxFatigue: FATIGUE_MAX,
+            fatigueRateWorking: getFatigueRateWorking(skill),
+            fatigueRateIdle: FATIGUE_RATE_IDLE,
+            burnoutDurationTicks: BURNOUT_DURATION_TICKS,
+            burnoutTimer: 0,
+        });
+
+        // Reset state for the new game
+        state.engineers = [
+            baseEngineer(1, "Alice", skillLevel), 
+            baseEngineer(2, "Bob", skillLevel), 
+        ];
+        state.company.money = 500;
+        state.inProgressTickets = [];
+        state.tickets = [];
+        state.nextTicketId = 1;
+        state.nextEngineerId = 3;
+        state.company.totalTicketsFixed = 0;
+        state.selectedTicket = null;
+        state.selectedEngineer = null;
+        state.coffeeBreakActive = false; // Reset break state
+
+        // Reset button text
+        document.querySelector('[onclick="takeCoffeeBreak()"]').textContent = 'Time for Coffee Break ☕';
+
+
+        // Start initial ticket generation and rendering
+        generateTicket(); 
+        render();
+        
+        // Start Game Loop (Ticket Progress updates every 4 seconds)
+        gameInterval = setInterval(gameLoop, 4000); 
+        
+        // Start Salary Deduction Loop (Salaries deducted every 10 seconds)
+        salaryInterval = setInterval(deductSalaries, 10000); 
+
+        // Start automatic ticket generation with default medium speed
+        document.getElementById('ticket-speed-selector').value = 15000; 
+        updateTicketGenerationSpeed(document.getElementById('ticket-speed-selector').value);
+
+        // Hide level selection and show game container
+        document.getElementById('level-selection').classList.add('hidden');
+        document.getElementById('game-container').classList.remove('hidden');
+    }
     
     // Expose global functions for onclick in HTML
     window.attemptHire = attemptHire;
     window.selectTicket = selectTicket;
+    window.toggleTicketStopResume = toggleTicketStopResume; 
     window.selectEngineer = selectEngineer;
     window.assignSelectedWork = assignSelectedWork; 
     window.updateTicketGenerationSpeed = updateTicketGenerationSpeed; 
+    window.startGame = startGame;
+    window.generateTicket = generateTicket; 
+    window.showEngineerDetails = showEngineerDetails; 
+    window.closeModal = closeModal; 
+    window.takeCoffeeBreak = takeCoffeeBreak; 
     
-    // Start the game
-    state.company.money = 500; 
-    generateTicket(); 
-    render();
-    
-    // Start Game Loop (Ticket Progress updates every 2 seconds)
-    gameInterval = setInterval(gameLoop, 2000); 
-    
-    // Start Salary Deduction Loop (Salaries deducted every 10 seconds, simulating a day/cycle)
-    salaryInterval = setInterval(deductSalaries, 10000); // 10 seconds
-
-    // Start automatic ticket generation with default (Medium: 15 seconds)
-    updateTicketGenerationSpeed(document.getElementById('ticket-speed-selector').value);
+    // Set initial ticket speed selector value to match the default selector
+    document.getElementById('ticket-speed-selector').value = 15000; 
 </script>
+
 </body>
 </html>
